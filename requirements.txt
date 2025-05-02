@@ -1,0 +1,5 @@
+twitchio
+pygame
+requests
+websockets
+python-dotenv
