@@ -3,3 +3,4 @@ pygame
 requests
 websockets
 python-dotenv
+coloredlogs
