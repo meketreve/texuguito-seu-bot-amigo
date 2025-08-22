@@ -1,5 +1,4 @@
 # 🦡 Texuguito – Seu Bot Amigo  
-
 Um bot interativo e robusto para Twitch que responde a resgates de Channel Points com sons personalizados!
 
 ## ✨ Principais Funcionalidades
@@ -122,14 +121,12 @@ O arquivo `config.json` permite configurar:
 - 📁 Organize seus áudios em pastas por categoria
 - 📊 Use o comando `!status` para monitorar o bot
 - 📝 Monitore os logs para debug e informações
+=======
+Um bot simples e interativo para facilitar sua vida!
 
----
+## 📌 Passos para Configuração  
 
-### ⚙️ Sobre  
-
-Este projeto evoluiu de um bot simples para uma solução robusta e profissional para automação de interações na Twitch. Com sistema de configuração externa, logging profissional e reconexão automática, oferece uma experiência confiável tanto para streamers quanto para desenvolvedores.
-
-Se tiver dúvidas ou sugestões, fique à vontade para contribuir! 🚀  
-
----
-🎯 **Feito com muito carinho e agora muito mais robusto!** ✨
+1️⃣ **Executar** `install.bat`  
+2️⃣ **Rodar** `Setup.py` _(Por favor, leia os prompts atentamente!)_  
+3️⃣ **Configurar** os áudios dentro da pasta `file` e adicioná-los no `bot.py`  
+4️⃣ **Executar** `bot.py` e aproveitar! 🎉  
