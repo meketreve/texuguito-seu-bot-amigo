@@ -62,27 +62,26 @@ python bot.py
 
 ```
 texuguito-seu-bot-amigo/
-├── bot.py                          # Código principal do bot (melhorado!)
+├── bot.py                          # Código principal do bot
 ├── setup.py                        # Script de configuração OAuth
-├── manage_rewards.py               # Gerenciador de recompensas (novo!)
-├── exemplo_uso.py                  # Exemplo de uso do sistema (novo!)
-├── config.json                     # Configurações do bot (novo!)
-├── requirements.txt                # Dependências (atualizado!)
+├── manage_rewards.py               # Gerenciador de recompensas
+├── config.json                     # Configurações do bot
+├── requirements.txt                # Dependências
 ├── install.bat                     # Script de instalação
 ├── .env                            # Credenciais da Twitch (gerado pelo setup.py)
 ├── .gitignore                      # Arquivos ignorados pelo Git
 ├── logs/                           # Pasta de logs (criada automaticamente)
 │   └── bot.log                     # Log do bot
-├── backups/                        # Backups do config.json (novo!)
+├── backups/                        # Backups do config.json
 │   └── config_backup_*.json        # Backups com timestamp
 ├── files/                          # Seus arquivos de áudio
 │   ├── audio/                      # Sons básicos
 │   ├── epic/                       # Sons épicos
 │   ├── funny/                      # Sons engraçados
 │   └── victory/                    # Sons de vitória
-├── MELHORIAS.md                    # Documentação das melhorias (novo!)
-├── GERENCIAMENTO_RECOMPENSAS.md    # Guia do sistema de recompensas (novo!)
-├── TUTORIAL_CRIAR_APP_TWITCH.md    # Tutorial para criar aplicativo Twitch (novo!)
+├── MELHORIAS.md                    # Documentação das melhorias
+├── GERENCIAMENTO_RECOMPENSAS.md    # Guia do sistema de recompensas
+├── TUTORIAL_CRIAR_APP_TWITCH.md    # Tutorial para criar aplicativo Twitch
 └── README.md                       # Este arquivo
 ```
 
@@ -115,7 +114,9 @@ O arquivo `config.json` permite configurar:
 - `websockets` - Conexão em tempo real
 - `requests` - Chamadas HTTP
 - `python-dotenv` - Variáveis de ambiente
-- `coloredlogs` - Logs coloridos (novo!)
+- `coloredlogs` - Logs coloridos
+- `rich` - Interface visual profissional
+- `emoji` - Suporte a emojis no terminal
 
 ## 🞆 Gerenciamento Programático de Recompensas
 
@@ -147,7 +148,6 @@ python manage_rewards.py sync
 
 - 📄 **[MELHORIAS.md](MELHORIAS.md)** - Detalhes técnicos das melhorias implementadas
 - 🎁 **[GERENCIAMENTO_RECOMPENSAS.md](GERENCIAMENTO_RECOMPENSAS.md)** - Guia completo do sistema de recompensas
-- 📝 **[exemplo_uso.py](exemplo_uso.py)** - Script de demonstração do sistema
 
 ## 🆘 Solução de Problemas
 
