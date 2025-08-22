@@ -121,4 +121,3 @@ O arquivo `config.json` permite configurar:
 - 📁 Organize seus áudios em pastas por categoria
 - 📊 Use o comando `!status` para monitorar o bot
 - 📝 Monitore os logs para debug e informações
-=======
