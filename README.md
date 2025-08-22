@@ -9,8 +9,7 @@ Um bot interativo e robusto para Twitch que responde a resgates de Channel Point
 - ⚙️ **Configuração externa** via arquivo JSON (sem editar código!)
 - ✅ **Validação automática** de arquivos de áudio na inicialização
 - 🛡️ **Tratamento robusto de erros** para máxima estabilidade
-- 📱 **Comando !status** para monitoramento em tempo real
-- 🎆 **Gerenciamento programático** de recompensas (CLI + Chat)
+- 🎆 **Gerenciamento programático** de recompensas via CLI
 - 🔄 **Sincronização automática** entre Twitch e configuração local
 - 💾 **Backup automático** antes de qualquer alteração
 
@@ -92,7 +91,7 @@ texuguito-seu-bot-amigo/
 ### 🎯 **Para Usuários**
 - ✅ **Muito mais estável** - Reconecta automaticamente se cair
 - 🎵 **Volume configurável** - Ajuste o volume dos sons
-- 📊 **Comando !status** - Veja se o bot está funcionando
+- 📊 **Monitoramento via logs** - Acompanhe o funcionamento
 - 🔊 **Som de fallback** - Toca um som padrão para recompensas não configuradas
 
 ### 🔧 **Para Desenvolvedores**
@@ -100,17 +99,6 @@ texuguito-seu-bot-amigo/
 - ⚙️ **Configuração externa** - Sem precisar editar código
 - 🛡️ **Tratamento de erros** - Não trava mais por pequenos problemas
 - 🏗️ **Código modular** - Mais fácil de entender e modificar
-
-## 🎮 Comandos Disponíveis
-
-### Para Todos os Usuários
-- `!status` - Mostra o status atual do bot
-
-### Para Administradores (Broadcaster/Mods)
-- `!list_rewards` - Lista todas as recompensas configuradas
-- `!add_reward "Nome" 100 "files/audio/som.mp3"` - Adiciona nova recompensa
-- `!remove_reward "Nome da Recompensa"` - Remove uma recompensa
-- `!sync_rewards` - Sincroniza recompensas entre Twitch e config
 
 ## 🔧 Configurações Avançadas
 
@@ -120,7 +108,6 @@ O arquivo `config.json` permite configurar:
 - 🎵 **Volume dos áudios** (0.0 a 1.0)
 - 🔄 **Tentativas de reconexão**
 - 📝 **Nível de logging** (DEBUG, INFO, WARNING, ERROR)
-- 🎯 **Prefixo dos comandos**
 
 ## 📋 Dependências
 
@@ -154,7 +141,7 @@ python manage_rewards.py sync
 - 💾 **Backup automático** do config antes de alterações
 - 🔍 **Validação de arquivos** antes de criar recompensas
 - 🔄 **Sincronização** entre Twitch e arquivo local
-- 🛡️ **Permissões de administrador** para comandos do chat
+- 🛡️ **Sistema de validação** robusto
 - 📊 **Detecção de inconsistências** automática
 
 ## 📖 Documentação Adicional
@@ -173,7 +160,7 @@ python manage_rewards.py sync
 ### Áudio não toca?
 1. Verifique se os caminhos no `config.json` estão corretos
 2. Confirme se os arquivos de áudio existem
-3. Use `!status` para ver quantas recompensas estão configuradas
+3. Consulte os logs em `logs/bot.log` para detalhes
 
 ### Bot para de funcionar?
 - Agora com reconexão automática! Verifique os logs para detalhes.
@@ -182,5 +169,5 @@ python manage_rewards.py sync
 
 - 🎵 Use arquivos `.mp3` ou `.wav` para melhor compatibilidade
 - 📁 Organize seus áudios em pastas por categoria
-- 📊 Use o comando `!status` para monitorar o bot
+- 📊 Monitore os logs para acompanhar o funcionamento
 - 📝 Monitore os logs para debug e informações
