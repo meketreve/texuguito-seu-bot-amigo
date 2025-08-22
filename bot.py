@@ -352,6 +352,152 @@ class Bot(commands.Bot):
             
         except Exception as e:
             logger.error(f"❌ Erro no comando status: {e}")
+    
+    def _is_admin(self, user) -> bool:
+        """Verifica se o usuário é administrador do canal"""
+        # O broadcaster sempre é admin
+        if hasattr(user, 'id') and str(user.id) == BROADCASTER_ID:
+            return True
+        
+        # Verifica se é moderador ou tem outras permissões especiais
+        if hasattr(user, 'is_mod') and user.is_mod:
+            return True
+            
+        if hasattr(user, 'is_broadcaster') and user.is_broadcaster:
+            return True
+            
+        return False
+    
+    @commands.command(name='list_rewards')
+    async def list_rewards_command(self, ctx):
+        """Lista todas as recompensas configuradas"""
+        try:
+            if not self._is_admin(ctx.author):
+                await ctx.send("❌ Este comando é apenas para administradores.")
+                return
+            
+            rewards = config.get('recompensas_audio', {})
+            
+            if not rewards:
+                await ctx.send("🔄 Nenhuma recompensa configurada.")
+                return
+            
+            msg = f"🎵 **Recompensas Configuradas ({len(rewards)})**\n"
+            for i, (name, audio) in enumerate(rewards.items(), 1):
+                if len(msg) > 400:  # Limite de caracteres do Twitch
+                    msg += f"... e mais {len(rewards) - i + 1} recompensas"
+                    break
+                msg += f"{i}. {name}\n"
+            
+            await ctx.send(msg)
+            logger.info(f"Comando !list_rewards executado por {ctx.author.name}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro no comando list_rewards: {e}")
+            await ctx.send("❌ Erro ao listar recompensas.")
+    
+    @commands.command(name='add_reward')
+    async def add_reward_command(self, ctx, name: str = None, cost: str = None, audio: str = None):
+        """Adiciona nova recompensa (sintaxe: !add_reward "Nome" 100 "caminho/audio.mp3")"""
+        try:
+            if not self._is_admin(ctx.author):
+                await ctx.send("❌ Este comando é apenas para administradores.")
+                return
+            
+            if not all([name, cost, audio]):
+                await ctx.send('📝 Uso: !add_reward "Nome da Recompensa" 100 "files/audio/som.mp3"')
+                return
+            
+            try:
+                cost_int = int(cost)
+            except ValueError:
+                await ctx.send("❌ O custo deve ser um número válido.")
+                return
+            
+            # Importa o gerenciador de recompensas
+            from manage_rewards import RewardManager
+            manager = RewardManager()
+            
+            # Cria a recompensa
+            success = manager.create_reward(name, cost_int, audio)
+            
+            if success:
+                await ctx.send(f"✅ Recompensa '{name}' criada com sucesso!")
+                # Recarrega configuração
+                global config
+                config = Config()
+                self.audio_validator = AudioValidator(config, logger)
+            else:
+                await ctx.send(f"❌ Falha ao criar recompensa '{name}'.")
+            
+            logger.info(f"Comando !add_reward executado por {ctx.author.name}: {name}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro no comando add_reward: {e}")
+            await ctx.send("❌ Erro ao adicionar recompensa.")
+    
+    @commands.command(name='remove_reward')
+    async def remove_reward_command(self, ctx, name: str = None):
+        """Remove uma recompensa (sintaxe: !remove_reward "Nome da Recompensa")"""
+        try:
+            if not self._is_admin(ctx.author):
+                await ctx.send("❌ Este comando é apenas para administradores.")
+                return
+            
+            if not name:
+                await ctx.send('📝 Uso: !remove_reward "Nome da Recompensa"')
+                return
+            
+            # Importa o gerenciador de recompensas
+            from manage_rewards import RewardManager
+            manager = RewardManager()
+            
+            # Remove a recompensa
+            success = manager.remove_reward(name)
+            
+            if success:
+                await ctx.send(f"🗑️ Recompensa '{name}' removida com sucesso!")
+                # Recarrega configuração
+                global config
+                config = Config()
+                self.audio_validator = AudioValidator(config, logger)
+            else:
+                await ctx.send(f"❌ Falha ao remover recompensa '{name}'.")
+            
+            logger.info(f"Comando !remove_reward executado por {ctx.author.name}: {name}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro no comando remove_reward: {e}")
+            await ctx.send("❌ Erro ao remover recompensa.")
+    
+    @commands.command(name='sync_rewards')
+    async def sync_rewards_command(self, ctx):
+        """Sincroniza recompensas entre Twitch e config"""
+        try:
+            if not self._is_admin(ctx.author):
+                await ctx.send("❌ Este comando é apenas para administradores.")
+                return
+            
+            await ctx.send("🔄 Sincronizando recompensas...")
+            
+            # Importa o gerenciador de recompensas
+            from manage_rewards import RewardManager
+            manager = RewardManager()
+            
+            # Executa sincronização (isso é mais para log/debug)
+            manager.sync_rewards()
+            
+            # Recarrega configuração
+            global config
+            config = Config()
+            self.audio_validator = AudioValidator(config, logger)
+            
+            await ctx.send("✅ Sincronização concluída! Verifique os logs para detalhes.")
+            logger.info(f"Comando !sync_rewards executado por {ctx.author.name}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro no comando sync_rewards: {e}")
+            await ctx.send("❌ Erro ao sincronizar recompensas.")
 
 def main():
     """Função principal para inicializar o bot"""

@@ -10,6 +10,9 @@ Um bot interativo e robusto para Twitch que responde a resgates de Channel Point
 - ✅ **Validação automática** de arquivos de áudio na inicialização
 - 🛡️ **Tratamento robusto de erros** para máxima estabilidade
 - 📱 **Comando !status** para monitoramento em tempo real
+- 🎆 **Gerenciamento programático** de recompensas (CLI + Chat)
+- 🔄 **Sincronização automática** entre Twitch e configuração local
+- 💾 **Backup automático** antes de qualquer alteração
 
 ## 📌 Passos para Configuração  
 
@@ -49,14 +52,27 @@ python bot.py
 
 ```
 texuguito-seu-bot-amigo/
-├── bot.py              # Código principal do bot (melhorado!)
-├── setup.py            # Script de configuração OAuth
-├── config.json         # Configurações do bot (novo!)
-├── requirements.txt    # Dependências (atualizado!)
-├── install.bat         # Script de instalação
-├── logs/               # Pasta de logs (criada automaticamente)
-├── MELHORIAS.md        # Documentação das melhorias (novo!)
-└── README.md           # Este arquivo
+├── bot.py                          # Código principal do bot (melhorado!)
+├── setup.py                        # Script de configuração OAuth
+├── manage_rewards.py               # Gerenciador de recompensas (novo!)
+├── exemplo_uso.py                  # Exemplo de uso do sistema (novo!)
+├── config.json                     # Configurações do bot (novo!)
+├── requirements.txt                # Dependências (atualizado!)
+├── install.bat                     # Script de instalação
+├── .env                            # Credenciais da Twitch (gerado pelo setup.py)
+├── .gitignore                      # Arquivos ignorados pelo Git
+├── logs/                           # Pasta de logs (criada automaticamente)
+│   └── bot.log                     # Log do bot
+├── backups/                        # Backups do config.json (novo!)
+│   └── config_backup_*.json        # Backups com timestamp
+├── files/                          # Seus arquivos de áudio
+│   ├── audio/                      # Sons básicos
+│   ├── epic/                       # Sons épicos
+│   ├── funny/                      # Sons engraçados
+│   └── victory/                    # Sons de vitória
+├── MELHORIAS.md                    # Documentação das melhorias (novo!)
+├── GERENCIAMENTO_RECOMPENSAS.md    # Guia do sistema de recompensas (novo!)
+└── README.md                       # Este arquivo
 ```
 
 ## 🚀 Novidades da Versão Melhorada
@@ -75,7 +91,14 @@ texuguito-seu-bot-amigo/
 
 ## 🎮 Comandos Disponíveis
 
+### Para Todos os Usuários
 - `!status` - Mostra o status atual do bot
+
+### Para Administradores (Broadcaster/Mods)
+- `!list_rewards` - Lista todas as recompensas configuradas
+- `!add_reward "Nome" 100 "files/audio/som.mp3"` - Adiciona nova recompensa
+- `!remove_reward "Nome da Recompensa"` - Remove uma recompensa
+- `!sync_rewards` - Sincroniza recompensas entre Twitch e config
 
 ## 🔧 Configurações Avançadas
 
@@ -96,9 +119,37 @@ O arquivo `config.json` permite configurar:
 - `python-dotenv` - Variáveis de ambiente
 - `coloredlogs` - Logs coloridos (novo!)
 
+## 🞆 Gerenciamento Programático de Recompensas
+
+O bot agora inclui um sistema completo para gerenciar recompensas:
+
+### 💻 Via Linha de Comando
+```bash
+# Listar recompensas
+python manage_rewards.py list
+
+# Criar nova recompensa
+python manage_rewards.py create "Nome" --cost 100 --audio "files/som.mp3"
+
+# Remover recompensa
+python manage_rewards.py remove "Nome"
+
+# Sincronizar e detectar problemas
+python manage_rewards.py sync
+```
+
+### 🎆 Recursos Avançados
+- 💾 **Backup automático** do config antes de alterações
+- 🔍 **Validação de arquivos** antes de criar recompensas
+- 🔄 **Sincronização** entre Twitch e arquivo local
+- 🛡️ **Permissões de administrador** para comandos do chat
+- 📊 **Detecção de inconsistências** automática
+
 ## 📖 Documentação Adicional
 
 - 📄 **[MELHORIAS.md](MELHORIAS.md)** - Detalhes técnicos das melhorias implementadas
+- 🎁 **[GERENCIAMENTO_RECOMPENSAS.md](GERENCIAMENTO_RECOMPENSAS.md)** - Guia completo do sistema de recompensas
+- 📝 **[exemplo_uso.py](exemplo_uso.py)** - Script de demonstração do sistema
 
 ## 🆘 Solução de Problemas
 
