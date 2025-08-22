@@ -122,11 +122,3 @@ O arquivo `config.json` permite configurar:
 - 📊 Use o comando `!status` para monitorar o bot
 - 📝 Monitore os logs para debug e informações
 =======
-Um bot simples e interativo para facilitar sua vida!
-
-## 📌 Passos para Configuração  
-
-1️⃣ **Executar** `install.bat`  
-2️⃣ **Rodar** `Setup.py` _(Por favor, leia os prompts atentamente!)_  
-3️⃣ **Configurar** os áudios dentro da pasta `file` e adicioná-los no `bot.py`  
-4️⃣ **Executar** `bot.py` e aproveitar! 🎉  
