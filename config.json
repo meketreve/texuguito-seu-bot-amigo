@@ -1,0 +1,26 @@
+{
+  "bot_settings": {
+    "channel": "meketreve",
+    "command_prefix": "!",
+    "audio_volume": 1.0,
+    "max_reconnect_attempts": 5,
+    "reconnect_delay_base": 2
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    "file": "logs/bot.log"
+  },
+  "recompensas_audio": {
+    "320c6743-3658-45f0-875e-998dee1bb59c": "files/audio/oof.mp3",
+    "oof": "files/audio/oof.mp3",
+    "vixe": "files/audio10/vixi.mp3",
+    "audio_50": "files/audio50/audio2.mp3",
+    "audio_100": "files/audio100/audio3.mp3",
+    "audio_200": "files/audio200/audio4.mp3"
+  },
+  "audio_paths": {
+    "base_directory": "files",
+    "fallback_sound": "files/audio/default.mp3"
+  }
+}
