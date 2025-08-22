@@ -12,15 +12,20 @@
     "file": "logs/bot.log"
   },
   "recompensas_audio": {
-    "320c6743-3658-45f0-875e-998dee1bb59c": "files/audio/oof.mp3",
     "oof": "files/audio/oof.mp3",
-    "vixe": "files/audio10/vixi.mp3",
-    "audio_50": "files/audio50/audio2.mp3",
-    "audio_100": "files/audio100/audio3.mp3",
-    "audio_200": "files/audio200/audio4.mp3"
+    "vixe": "files/audio/vixi.mp3",
+    "fart": "files/audio/fart.mp3"
   },
   "audio_paths": {
     "base_directory": "files",
-    "fallback_sound": "files/audio/default.mp3"
+    "fallback_sound": "files/audio/error.mp3"
+  },
+  "reward_metadata": {
+    "fart": {
+      "audio_path": "files/audio/fart.mp3",
+      "twitch_id": "95fa614f-c870-41bf-883d-57a2d430e42b",
+      "cost": 10,
+      "created_at": "2025-08-22T10:22:21.394276"
+    }
   }
 }

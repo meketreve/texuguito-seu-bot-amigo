@@ -16,19 +16,30 @@ Um bot interativo e robusto para Twitch que responde a resgates de Channel Point
 
 ## 📌 Passos para Configuração  
 
+### ⚠️ **PRIMEIRO PASSO OBRIGATÓRIO:**
+🔗 **[📖 TUTORIAL: Como Criar Seu Aplicativo Twitch](TUTORIAL_CRIAR_APP_TWITCH.md)**
+
+**🚨 IMPORTANTE:** Cada usuário deve ter seu próprio aplicativo registrado na Twitch!
+
+---
+
 ### 1️⃣ **Instalação das Dependências**
 ```bash
 # Execute o install.bat ou manualmente:
 pip install -r requirements.txt
 ```
 
-### 2️⃣ **Configuração da API da Twitch**
+### 2️⃣ **Criar Aplicativo Twitch (OBRIGATÓRIO)**
+1. Siga o **[Tutorial Completo](TUTORIAL_CRIAR_APP_TWITCH.md)**
+2. Anote seu Client ID
+
+### 3️⃣ **Configuração da API da Twitch**
 ```bash
 python setup.py
 ```
-_(Por favor, leia os prompts atentamente!)_
+_(Cole o Client ID do passo anterior quando solicitado)_
 
-### 3️⃣ **Configuração de Áudios**
+### 4️⃣ **Configuração de Áudios**
 - Edite o arquivo `config.json` criado
 - Configure os caminhos dos arquivos de áudio para cada recompensa
 - Organize seus áudios na pasta `files/`
@@ -43,7 +54,7 @@ _(Por favor, leia os prompts atentamente!)_
 }
 ```
 
-### 4️⃣ **Executar o Bot**
+### 5️⃣ **Executar o Bot**
 ```bash
 python bot.py
 ```
@@ -72,6 +83,7 @@ texuguito-seu-bot-amigo/
 │   └── victory/                    # Sons de vitória
 ├── MELHORIAS.md                    # Documentação das melhorias (novo!)
 ├── GERENCIAMENTO_RECOMPENSAS.md    # Guia do sistema de recompensas (novo!)
+├── TUTORIAL_CRIAR_APP_TWITCH.md    # Tutorial para criar aplicativo Twitch (novo!)
 └── README.md                       # Este arquivo
 ```
 

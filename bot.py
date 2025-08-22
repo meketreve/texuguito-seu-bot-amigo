@@ -9,7 +9,6 @@ import logging
 import coloredlogs
 from pathlib import Path
 from typing import Dict, Optional
-from twitchio.ext import commands
 
 # Carrega configurações do arquivo .env
 load_dotenv()
@@ -99,7 +98,6 @@ logger = logger_instance.get_logger()
 
 # Variáveis de ambiente
 CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 TOKEN = os.getenv("TOKEN")
 BROADCASTER_ID = os.getenv("BROADCASTER_ID")
 TWITCH_WS_URL = "wss://eventsub.wss.twitch.tv/ws"
@@ -146,14 +144,11 @@ class AudioValidator:
         """Retorna o caminho do arquivo de áudio para uma recompensa"""
         return self.recompensas_audio.get(reward_name)
 
-class Bot(commands.Bot):
+class TexuguitoBot:
     def __init__(self):
         # Configurações do bot
         bot_settings = config.get('bot_settings', {})
-        channel = bot_settings.get('channel', 'meketreve')
-        prefix = bot_settings.get('command_prefix', '!')
-        
-        super().__init__(token=TOKEN, prefix=prefix, initial_channels=[channel])
+        self.channel = bot_settings.get('channel', 'meketreve')
         
         # Inicializa componentes
         self.audio_validator = AudioValidator(config, logger)
@@ -162,19 +157,18 @@ class Bot(commands.Bot):
         self.audio_volume = bot_settings.get('audio_volume', 1.0)
         self.is_connected = False
         
-        logger.info(f"Bot inicializado - Canal: {channel}, Prefix: {prefix}")
+        logger.info(f"Bot inicializado para canal: {self.channel}")
     
-    async def event_ready(self):
-        """Evento chamado quando o bot está pronto"""
-        logger.info(f'🤖 Bot logado como: {self.nick}')
-        logger.info(f'📊 ID do usuário: {self.user_id}')
+    async def start(self):
+        """Inicia o bot"""
+        logger.info('🤖 Texuguito Bot iniciado!')
         
         # Valida arquivos de áudio na inicialização
         logger.info("🔍 Validando arquivos de áudio...")
         validation_results = self.audio_validator.validate_audio_files()
         
         # Inicia conexão com EventSub
-        asyncio.create_task(self.conectar_eventsub_com_retry())
+        await self.conectar_eventsub_com_retry()
     
     async def conectar_eventsub_com_retry(self):
         """Conecta ao EventSub com sistema de retry automático"""
@@ -339,171 +333,19 @@ class Bot(commands.Bot):
         except Exception as e:
             logger.error(f"❌ Erro na reprodução síncrona do áudio: {e}")
     
-    @commands.command(name='status')
-    async def status_command(self, ctx):
-        """Comando para verificar status do bot"""
-        try:
-            status_msg = "🤖 **Status do Texuguito Bot**\n"
-            status_msg += f"📡 Conectado: {'✅' if self.is_connected else '❌'}\n"
-            status_msg += f"🎵 Recompensas configuradas: {len(config.get('recompensas_audio', {}))}\n"
-            
-            await ctx.send(status_msg)
-            logger.info(f"Comando !status executado por {ctx.author.name}")
-            
-        except Exception as e:
-            logger.error(f"❌ Erro no comando status: {e}")
-    
-    def _is_admin(self, user) -> bool:
-        """Verifica se o usuário é administrador do canal"""
-        # O broadcaster sempre é admin
-        if hasattr(user, 'id') and str(user.id) == BROADCASTER_ID:
-            return True
-        
-        # Verifica se é moderador ou tem outras permissões especiais
-        if hasattr(user, 'is_mod') and user.is_mod:
-            return True
-            
-        if hasattr(user, 'is_broadcaster') and user.is_broadcaster:
-            return True
-            
-        return False
-    
-    @commands.command(name='list_rewards')
-    async def list_rewards_command(self, ctx):
-        """Lista todas as recompensas configuradas"""
-        try:
-            if not self._is_admin(ctx.author):
-                await ctx.send("❌ Este comando é apenas para administradores.")
-                return
-            
-            rewards = config.get('recompensas_audio', {})
-            
-            if not rewards:
-                await ctx.send("🔄 Nenhuma recompensa configurada.")
-                return
-            
-            msg = f"🎵 **Recompensas Configuradas ({len(rewards)})**\n"
-            for i, (name, audio) in enumerate(rewards.items(), 1):
-                if len(msg) > 400:  # Limite de caracteres do Twitch
-                    msg += f"... e mais {len(rewards) - i + 1} recompensas"
-                    break
-                msg += f"{i}. {name}\n"
-            
-            await ctx.send(msg)
-            logger.info(f"Comando !list_rewards executado por {ctx.author.name}")
-            
-        except Exception as e:
-            logger.error(f"❌ Erro no comando list_rewards: {e}")
-            await ctx.send("❌ Erro ao listar recompensas.")
-    
-    @commands.command(name='add_reward')
-    async def add_reward_command(self, ctx, name: str = None, cost: str = None, audio: str = None):
-        """Adiciona nova recompensa (sintaxe: !add_reward "Nome" 100 "caminho/audio.mp3")"""
-        try:
-            if not self._is_admin(ctx.author):
-                await ctx.send("❌ Este comando é apenas para administradores.")
-                return
-            
-            if not all([name, cost, audio]):
-                await ctx.send('📝 Uso: !add_reward "Nome da Recompensa" 100 "files/audio/som.mp3"')
-                return
-            
-            try:
-                cost_int = int(cost)
-            except ValueError:
-                await ctx.send("❌ O custo deve ser um número válido.")
-                return
-            
-            # Importa o gerenciador de recompensas
-            from manage_rewards import RewardManager
-            manager = RewardManager()
-            
-            # Cria a recompensa
-            success = manager.create_reward(name, cost_int, audio)
-            
-            if success:
-                await ctx.send(f"✅ Recompensa '{name}' criada com sucesso!")
-                # Recarrega configuração
-                global config
-                config = Config()
-                self.audio_validator = AudioValidator(config, logger)
-            else:
-                await ctx.send(f"❌ Falha ao criar recompensa '{name}'.")
-            
-            logger.info(f"Comando !add_reward executado por {ctx.author.name}: {name}")
-            
-        except Exception as e:
-            logger.error(f"❌ Erro no comando add_reward: {e}")
-            await ctx.send("❌ Erro ao adicionar recompensa.")
-    
-    @commands.command(name='remove_reward')
-    async def remove_reward_command(self, ctx, name: str = None):
-        """Remove uma recompensa (sintaxe: !remove_reward "Nome da Recompensa")"""
-        try:
-            if not self._is_admin(ctx.author):
-                await ctx.send("❌ Este comando é apenas para administradores.")
-                return
-            
-            if not name:
-                await ctx.send('📝 Uso: !remove_reward "Nome da Recompensa"')
-                return
-            
-            # Importa o gerenciador de recompensas
-            from manage_rewards import RewardManager
-            manager = RewardManager()
-            
-            # Remove a recompensa
-            success = manager.remove_reward(name)
-            
-            if success:
-                await ctx.send(f"🗑️ Recompensa '{name}' removida com sucesso!")
-                # Recarrega configuração
-                global config
-                config = Config()
-                self.audio_validator = AudioValidator(config, logger)
-            else:
-                await ctx.send(f"❌ Falha ao remover recompensa '{name}'.")
-            
-            logger.info(f"Comando !remove_reward executado por {ctx.author.name}: {name}")
-            
-        except Exception as e:
-            logger.error(f"❌ Erro no comando remove_reward: {e}")
-            await ctx.send("❌ Erro ao remover recompensa.")
-    
-    @commands.command(name='sync_rewards')
-    async def sync_rewards_command(self, ctx):
-        """Sincroniza recompensas entre Twitch e config"""
-        try:
-            if not self._is_admin(ctx.author):
-                await ctx.send("❌ Este comando é apenas para administradores.")
-                return
-            
-            await ctx.send("🔄 Sincronizando recompensas...")
-            
-            # Importa o gerenciador de recompensas
-            from manage_rewards import RewardManager
-            manager = RewardManager()
-            
-            # Executa sincronização (isso é mais para log/debug)
-            manager.sync_rewards()
-            
-            # Recarrega configuração
-            global config
-            config = Config()
-            self.audio_validator = AudioValidator(config, logger)
-            
-            await ctx.send("✅ Sincronização concluída! Verifique os logs para detalhes.")
-            logger.info(f"Comando !sync_rewards executado por {ctx.author.name}")
-            
-        except Exception as e:
-            logger.error(f"❌ Erro no comando sync_rewards: {e}")
-            await ctx.send("❌ Erro ao sincronizar recompensas.")
+    def get_status(self) -> str:
+        """Retorna status do bot como string"""
+        status_msg = f"🤖 Texuguito Bot\n"
+        status_msg += f"📡 Conectado: {'✅' if self.is_connected else '❌'}\n"
+        status_msg += f"🎵 Recompensas: {len(config.get('recompensas_audio', {}))}\n"
+        status_msg += f"🏠 Canal: {self.channel}"
+        return status_msg
 
-def main():
+async def main():
     """Função principal para inicializar o bot"""
     try:
         # Verifica variáveis de ambiente necessárias
-        required_env_vars = ['CLIENT_ID', 'CLIENT_SECRET', 'TOKEN', 'BROADCASTER_ID']
+        required_env_vars = ['CLIENT_ID', 'TOKEN', 'BROADCASTER_ID']
         missing_vars = [var for var in required_env_vars if not os.getenv(var)]
         
         if missing_vars:
@@ -514,8 +356,8 @@ def main():
         logger.info("🚀 Iniciando Texuguito Bot...")
         
         # Cria e executa o bot
-        bot = Bot()
-        bot.run()
+        bot = TexuguitoBot()
+        await bot.start()
         
     except KeyboardInterrupt:
         logger.info("⏹️ Bot interrompido pelo usuário")
@@ -524,4 +366,4 @@ def main():
         raise
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

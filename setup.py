@@ -1,70 +1,148 @@
 import json
 import requests
 import webbrowser
-import re
+import os
+from pathlib import Path
 
-# Configurações iniciais
-print("Caso não tenha um app da Twitch pronto, precisa criar um.")
-print("Para criar um novo ou ver os dados de um existente, acesse: https://dev.twitch.tv/console/eventsub/subscriptions")
-print("Caso crie um novo, use https://twitchtokengenerator.com no campo 'URLs de redirecionamento OAuth'")
+def print_header():
+    """Exibe cabeçalho do setup"""
+    print("="*60)
+    print("🦡 TEXUGUITO BOT - CONFIGURAÇÃO INICIAL")
+    print("="*60)
+    print()
 
-CLIENT_ID = input("Digite seu CLIENT_ID da Twitch: ")
-CLIENT_SECRET = input("Digite seu CLIENT_SECRET da Twitch: ")
-REDIRECT_URI = "https://twitchtokengenerator.com"  # Defina no app da Twitch
-AUTH_URL = f"https://id.twitch.tv/oauth2/authorize?client_id={CLIENT_ID}&redirect_uri={REDIRECT_URI}&response_type=code&scope=channel:read:redemptions channel:manage:redemptions"
+def print_instructions():
+    """Exibe instruções de configuração"""
+    print("📋 MÉTODO SIMPLIFICADO:")
+    print()
+    print("1️⃣ O site será aberto com os scopes já pré-selecionados")
+    print("2️⃣ Cole seu Client ID (do https://dev.twitch.tv/console/apps)")
+    print("3️⃣ ✅ Scopes necessários já estarão marcados automaticamente")
+    print("4️⃣ Clique em 'Generate Token!'")
+    print("5️⃣ Copie o Access Token e Client ID gerados")
+    print()
+    print("⚠️  IMPORTANTE: Você precisará do TOKEN e CLIENT_ID gerados pelo site!")
+    print("-"*60)
+    print()
 
-# Abre a URL de autorização no navegador
-print("\nAcesse este link, autorize a aplicação e copie o link gerado:")
-print(AUTH_URL)
-webbrowser.open(AUTH_URL)
+def validate_input(value, field_name):
+    """Valida entrada do usuário"""
+    if not value or not value.strip():
+        print(f"❌ {field_name} não pode estar vazio!")
+        return False
+    return True
 
-# Solicita o link completo do usuário
-full_link = input("\nCole o link completo aqui: ")
+def check_existing_config():
+    """Verifica se já existe configuração"""
+    if Path(".env").exists():
+        print("⚠️  Arquivo .env já existe!")
+        choice = input("Deseja sobrescrever a configuração existente? (s/N): ").strip().lower()
+        if choice not in ['s', 'sim', 'y', 'yes']:
+            print("❌ Configuração cancelada.")
+            return False
+        print("💾 Criando backup da configuração existente...")
+        try:
+            backup_name = ".env.backup"
+            Path(".env").rename(backup_name)
+            print(f"✅ Backup salvo como: {backup_name}")
+        except Exception as e:
+            print(f"⚠️  Não foi possível criar backup: {e}")
+    return True
 
-# Extrai apenas o código de autorização usando regex
-match = re.search(r'code=([^&]+)', full_link)
-if match:
-    AUTH_CODE = match.group(1)
-    print(f"\nCódigo de autorização extraído: {AUTH_CODE}")
-else:
-    print("\nErro: Código de autorização não encontrado no link.")
-    exit()
+# Início do script
+print_header()
 
-# Troca o código pelo token OAuth
-TOKEN_URL = "https://id.twitch.tv/oauth2/token"
-payload = {
-    "client_id": CLIENT_ID,
-    "client_secret": CLIENT_SECRET,
-    "code": AUTH_CODE,
-    "grant_type": "authorization_code",
-    "redirect_uri": REDIRECT_URI
-}
-response = requests.post(TOKEN_URL, data=payload)
-token_data = response.json()
-TOKEN = token_data.get("access_token")
+if not check_existing_config():
+    exit(0)
 
-if TOKEN:
-    print(f"\nToken OAuth obtido: {TOKEN}")
-else:
-    print(f"\nErro ao obter token: {token_data}")
-    exit()
+print_instructions()
 
-# Obtém ID do canal
+print("🔗 Abrindo https://twitchtokengenerator.com com scopes pré-selecionados...")
+try:
+    webbrowser.open("https://twitchtokengenerator.com/?code=y0piiclp4zczva3u6nzs8jnsim4w8f&scope=chat%3Aread+chat%3Aedit+channel%3Aread%3Aredemptions+channel%3Amanage%3Aredemptions")
+except Exception as e:
+    print(f"⚠️  Não foi possível abrir o navegador: {e}")
+
+print("\n" + "="*60)
+print("🎯 GERAÇÃO DE TOKEN")
+print("="*60)
+print("📝 INSTRUÇÕES NO SITE:")
+print("1. Cole seu Client ID (do https://dev.twitch.tv/console/apps)")
+print("2. ✅ Os scopes necessários já estão pré-selecionados!")
+print("3. Clique em 'Generate Token!'")
+print("4. Copie o ACCESS TOKEN gerado")
+print("5. Copie o CLIENT ID mostrado (pode ser diferente do seu)")
+print()
+
+# Coleta o CLIENT_ID gerado pelo site
+while True:
+    CLIENT_ID = input("🔑 Cole o CLIENT_ID gerado pelo site: ").strip()
+    if validate_input(CLIENT_ID, "CLIENT_ID"):
+        break
+
+# Coleta o token gerado pelo site
+while True:
+    TOKEN = input("🔐 Cole o ACCESS TOKEN gerado pelo site: ").strip()
+    if validate_input(TOKEN, "ACCESS TOKEN"):
+        break
+
+print("\n✅ Dados recebidos com sucesso!")
+
+# Obtém informações do usuário
+print("📄 Obtendo informações do canal...")
 headers = {
     "Client-ID": CLIENT_ID,
     "Authorization": f"Bearer {TOKEN}"
 }
-url_user = "https://api.twitch.tv/helix/users"
-user_response = requests.get(url_user, headers=headers).json()
-BROADCASTER_ID = user_response["data"][0]["id"]
 
-print(f"\nID do canal obtido: {BROADCASTER_ID}")
+try:
+    user_response = requests.get("https://api.twitch.tv/helix/users", headers=headers, timeout=10)
+    user_data = user_response.json()
+    
+    if "data" in user_data and len(user_data["data"]) > 0:
+        user_info = user_data["data"][0]
+        BROADCASTER_ID = user_info["id"]
+        display_name = user_info["display_name"]
+        login = user_info["login"]
+        
+        print(f"✅ Canal identificado:")
+        print(f"   📄 Nome: {display_name}")
+        print(f"   🔖 Login: {login}")
+        print(f"   🆔 ID: {BROADCASTER_ID}")
+    else:
+        print("❌ ERRO: Não foi possível obter informações do usuário.")
+        print(f"📊 Resposta da API: {user_data}")
+        input("\nPressione Enter para sair...")
+        exit(1)
+except requests.RequestException as e:
+    print(f"❌ ERRO ao obter informações do usuário: {e}")
+    input("\nPressione Enter para sair...")
+    exit(1)
 
-# Salva tudo no `.env`
-with open(".env", "w") as f:
-    f.write(f"CLIENT_ID={CLIENT_ID}\n")
-    f.write(f"CLIENT_SECRET={CLIENT_SECRET}\n")
-    f.write(f"TOKEN={TOKEN}\n")
-    f.write(f"BROADCASTER_ID={BROADCASTER_ID}\n")
+# Salva configuração
+print("\n💾 Salvando configuração...")
+try:
+    with open(".env", "w", encoding="utf-8") as f:
+        f.write(f"CLIENT_ID={CLIENT_ID}\n")
+        f.write(f"TOKEN={TOKEN}\n")
+        f.write(f"BROADCASTER_ID={BROADCASTER_ID}\n")
+    
+    print("✅ Arquivo .env criado com sucesso!")
+except Exception as e:
+    print(f"❌ ERRO ao salvar arquivo .env: {e}")
+    input("\nPressione Enter para sair...")
+    exit(1)
 
-print("\nConfiguração concluída! Agora rode o bot normalmente.")
+# Sucesso!
+print("\n" + "="*60)
+print("🎉 CONFIGURAÇÃO CONCLUÍDA COM SUCESSO!")
+print("="*60)
+print("🚀 Próximos passos:")
+print("1. python bot.py                    # Executar o bot")
+print("2. python manage_rewards.py list    # Gerenciar recompensas")
+print("3. python exemplo_uso.py            # Ver exemplos")
+print()
+print("📝 O bot está pronto para uso! Divirta-se! 🎆")
+print("="*60)
+
+input("\nPressione Enter para sair...")

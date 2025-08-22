@@ -39,12 +39,12 @@ class TwitchAPI:
     
     def __init__(self):
         self.client_id = os.getenv('CLIENT_ID')
-        self.client_secret = os.getenv('CLIENT_SECRET')
         self.access_token = os.getenv('TOKEN')
         self.broadcaster_id = os.getenv('BROADCASTER_ID')
         
-        if not all([self.client_id, self.client_secret, self.access_token, self.broadcaster_id]):
+        if not all([self.client_id, self.access_token, self.broadcaster_id]):
             logger.error("❌ Credenciais da Twitch não configuradas. Execute setup.py primeiro.")
+            logger.error("💡 Variáveis necessárias no .env: CLIENT_ID, TOKEN, BROADCASTER_ID")
             sys.exit(1)
         
         self.headers = {
