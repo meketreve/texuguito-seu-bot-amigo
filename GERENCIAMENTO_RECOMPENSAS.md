@@ -5,11 +5,10 @@ O Texuguito Bot agora possui um sistema completo para gerenciar recompensas de C
 ## 📋 Visão Geral
 
 Este sistema permite:
-- ✅ **Criar recompensas** diretamente via linha de comando ou bot
+- ✅ **Criar recompensas** diretamente via linha de comando
 - 📝 **Listar** todas as recompensas configuradas
 - 🗑️ **Remover** recompensas da Twitch e config
 - 🔄 **Sincronizar** entre Twitch e arquivo local
-- ⚡ **Gerenciar pelo chat** usando comandos do bot
 - 💾 **Backup automático** antes de qualquer alteração
 
 ## 🛠️ Como Usar
@@ -48,36 +47,6 @@ python manage_rewards.py remove "Nome da Recompensa"
 python manage_rewards.py sync
 ```
 
-### 2. 💬 Via Chat do Bot (Comandos)
-
-#### Verificar Status
-```
-!status
-```
-
-#### Listar Recompensas
-```
-!list_rewards
-```
-*Apenas para administradores (broadcaster/mods)*
-
-#### Adicionar Recompensa
-```
-!add_reward "Nome da Recompensa" 100 "files/audio/som.mp3"
-```
-*Apenas para administradores*
-
-#### Remover Recompensa
-```
-!remove_reward "Nome da Recompensa"
-```
-*Apenas para administradores*
-
-#### Sincronizar
-```
-!sync_rewards
-```
-*Apenas para administradores*
 
 ## 📁 Estrutura de Arquivos
 
@@ -133,11 +102,11 @@ python manage_rewards.py create "Som de Vitória" \
 - 🗂️ **Pasta dedicada** `backups/` 
 - ♻️ **Restauração fácil** em caso de problemas
 
-### Permissões de Comandos
-- 🔐 **Apenas admins** podem usar comandos de gerenciamento
-- ✅ **Broadcaster** sempre tem acesso
-- 👮‍♂️ **Moderadores** têm acesso aos comandos
-- 🚫 **Usuários normais** só podem ver status
+### Validação de Permissões
+- 🔐 **Gerenciamento via CLI** é livre para o proprietário do bot
+- ✅ **Acesso total** às funcionalidades de administração
+- 👮‍♂️ **Controle direto** sobre todas as recompensas
+- 🚫 **Sem necessidade de permissões** de chat
 
 ### Validações
 - ✅ **Arquivo de áudio existe** antes de criar
@@ -223,11 +192,13 @@ python manage_rewards.py sync
 python bot.py
 ```
 
-### 6. Gerenciando pelo Chat
-```
-!status                                    # Verifica se está funcionando
-!list_rewards                             # Lista recompensas (admin only)
-!add_reward "Novo Som" 150 "files/new.mp3"  # Adiciona (admin only)
+### 6. Monitorando via Logs
+```bash
+# Monitore os logs em tempo real
+tail -f logs/bot.log
+
+# Verifique o status das recompensas
+python manage_rewards.py list
 ```
 
 ## 🎯 Dicas e Melhores Práticas
@@ -248,8 +219,8 @@ python bot.py
 - 👤 **Max por usuário**: Evite dominação
 
 ### Monitoramento
-- 📋 **`!list_rewards`** regularmente para verificar
-- 🔄 **`!sync_rewards`** após mudanças manuais
+- 📋 **`manage_rewards.py list`** regularmente para verificar
+- 🔄 **`manage_rewards.py sync`** após mudanças manuais
 - 📝 **Monitore logs** para problemas
 
 ## 🚨 Solução de Problemas
@@ -273,10 +244,10 @@ python manage_rewards.py sync
 # Reinicie o bot
 ```
 
-### Problemas de permissão no chat
-- ✅ Verifique se você é broadcaster ou mod
-- 🔄 Teste com `!status` primeiro
-- 📝 Verifique logs para erros
+### Bot não responde a resgates
+- ✅ Verifique se o EventSub está conectado
+- 🔄 Reinicie o bot para reconectar
+- 📝 Verifique logs para erros de conexão
 
 ### Backup Recovery
 ```bash
@@ -290,7 +261,7 @@ python bot.py
 ## 🎉 Conclusão
 
 Com este sistema, você pode:
-- ⚡ **Gerenciar recompensas rapidamente** via CLI ou chat
+- ⚡ **Gerenciar recompensas rapidamente** via linha de comando
 - 🔄 **Manter tudo sincronizado** automaticamente
 - 💾 **Backups seguros** para evitar perdas
 - 📊 **Monitoramento completo** de inconsistências

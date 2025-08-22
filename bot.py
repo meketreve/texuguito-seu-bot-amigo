@@ -6,14 +6,146 @@ import json
 import requests
 import pygame
 import logging
-import coloredlogs
+import time
 from pathlib import Path
 from typing import Dict, Optional
+
+# Rich imports para interface visual
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import track, Progress, SpinnerColumn, TextColumn
+from rich.table import Table
+from rich.logging import RichHandler
+from rich.text import Text
+from rich.live import Live
+from rich import box
+
+# Emoji import
+import emoji
 
 # Carrega configurações do arquivo .env
 load_dotenv()
 
-# Configuração de logging
+# Console global para rich
+console = Console()
+
+# Utilitários para emojis
+def em(emoji_code: str) -> str:
+    """Converte código emoji para caractere"""
+    return emoji.emojize(emoji_code)
+
+class VisualInterface:
+    """Interface visual usando Rich"""
+    
+    def __init__(self):
+        self.console = console
+    
+    def show_banner(self):
+        """Mostra banner inicial do bot"""
+        banner_text = Text()
+        banner_text.append(em(":badger:"), style="bold blue")
+        banner_text.append(" Texuguito Bot ", style="bold blue")
+        banner_text.append(em(":musical_note:"), style="bold yellow")
+        banner_text.append(" Seu Bot Amigo", style="bold blue")
+        
+        banner = Panel(
+            banner_text,
+            title="[bold green]Sistema Iniciando[/]",
+            border_style="blue",
+            box=box.DOUBLE
+        )
+        self.console.print(banner)
+        self.console.print()
+    
+    def show_startup_progress(self, tasks: list):
+        """Mostra progresso de inicialização"""
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=self.console,
+            transient=True
+        ) as progress:
+            for task_name in tasks:
+                task_id = progress.add_task(f"[cyan]{task_name}...", total=None)
+                time.sleep(0.8)  # Simula carregamento
+                progress.update(task_id, completed=100)
+    
+    def show_config_table(self, bot_config: dict):
+        """Mostra tabela de configurações"""
+        table = Table(title=f"{em(':gear:')} Configurações Carregadas", box=box.ROUNDED)
+        table.add_column("Item", style="cyan", no_wrap=True)
+        table.add_column("Valor", style="magenta")
+        
+        table.add_row(f"{em(':television:')} Canal", bot_config.get('channel', 'N/A'))
+        table.add_row(f"{em(':speaker:')} Volume", f"{bot_config.get('audio_volume', 1.0):.1f}")
+        table.add_row(f"{em(':repeat:')} Max Reconexões", str(bot_config.get('max_reconnect_attempts', 5)))
+        
+        self.console.print(table)
+        self.console.print()
+    
+    def show_audio_validation(self, validation_results: dict):
+        """Mostra resultado da validação de áudios"""
+        if not validation_results:
+            self.console.print(f"{em(':warning:')} [yellow]Nenhuma recompensa configurada[/]")
+            return
+        
+        table = Table(title=f"{em(':musical_note:')} Validação de Áudios", box=box.SIMPLE)
+        table.add_column("Recompensa", style="cyan")
+        table.add_column("Status", justify="center")
+        table.add_column("Arquivo", style="dim")
+        
+        for reward_name, exists in validation_results.items():
+            status = f"{em(':check_mark_button:')} [green]OK[/]" if exists else f"{em(':cross_mark:')} [red]Erro[/]"
+            audio_file = config.get('recompensas_audio', {}).get(reward_name, "N/A")
+            table.add_row(reward_name, status, audio_file)
+        
+        self.console.print(table)
+        self.console.print()
+    
+    def show_connection_status(self, connected: bool, session_id: str = None):
+        """Mostra status da conexão"""
+        if connected:
+            status_text = Text()
+            status_text.append(em(":satellite:"), style="green")
+            status_text.append(" Conectado ao EventSub da Twitch ", style="bold green")
+            status_text.append(em(":check_mark_button:"), style="green")
+            
+            if session_id:
+                status_text.append(f"\nSession ID: {session_id[:8]}...", style="dim")
+            
+            panel = Panel(status_text, border_style="green", box=box.ROUNDED)
+        else:
+            status_text = Text()
+            status_text.append(em(":cross_mark:"), style="red")
+            status_text.append(" Desconectado ", style="bold red")
+            status_text.append(em(":warning:"), style="red")
+            
+            panel = Panel(status_text, border_style="red", box=box.ROUNDED)
+        
+        self.console.print(panel)
+    
+    def log_reward_redemption(self, reward_title: str, user_name: str, audio_played: bool):
+        """Log visual para resgate de recompensa"""
+        reward_text = Text()
+        reward_text.append(em(":gift:"), style="yellow")
+        reward_text.append(f" {reward_title} ", style="bold yellow")
+        reward_text.append(f"resgatada por ", style="white")
+        reward_text.append(f"{user_name}", style="bold cyan")
+        
+        if audio_played:
+            reward_text.append(f" {em(':speaker:')}", style="green")
+        else:
+            reward_text.append(f" {em(':muted_speaker:')}", style="red")
+        
+        panel = Panel(
+            reward_text, 
+            title="[bold]Recompensa Resgatada[/]",
+            border_style="yellow",
+            box=box.SIMPLE
+        )
+        self.console.print(panel)
+
+# Configuração de logging híbrido
 class BotLogger:
     def __init__(self, config: dict):
         self.logger = logging.getLogger('TexuguitoBot')
@@ -26,16 +158,21 @@ class BotLogger:
         level = getattr(logging, config.get('level', 'INFO').upper())
         self.logger.setLevel(level)
         
-        # Formato
+        # Handler para arquivo (formato tradicional)
         formatter = logging.Formatter(config.get('format', '%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        
-        # Handler para arquivo
         file_handler = logging.FileHandler(log_file, encoding='utf-8')
         file_handler.setFormatter(formatter)
         self.logger.addHandler(file_handler)
         
-        # Handler colorido para console
-        coloredlogs.install(level=level, logger=self.logger, fmt=config.get('format'))
+        # Handler Rich para console (visual)
+        rich_handler = RichHandler(
+            console=console,
+            show_time=True,
+            show_path=False,
+            markup=True
+        )
+        rich_handler.setLevel(level)
+        self.logger.addHandler(rich_handler)
         
     def get_logger(self):
         return self.logger
@@ -146,6 +283,9 @@ class AudioValidator:
 
 class TexuguitoBot:
     def __init__(self):
+        # Interface visual
+        self.ui = VisualInterface()
+        
         # Configurações do bot
         bot_settings = config.get('bot_settings', {})
         self.channel = bot_settings.get('channel', 'meketreve')
@@ -157,7 +297,7 @@ class TexuguitoBot:
         self.audio_volume = bot_settings.get('audio_volume', 1.0)
         self.is_connected = False
         
-        logger.info(f"Bot inicializado para canal: {self.channel}")
+        logger.info(f"[bold blue]Bot inicializado para canal:[/] [cyan]{self.channel}[/]")
     
     async def start(self):
         """Inicia o bot"""
@@ -204,8 +344,15 @@ class TexuguitoBot:
                 
                 logger.info(f"🆔 Session ID recebido: {session_id}")
                 
+                # Mostra status de conexão bem-sucedida
+                self.ui.show_connection_status(True, session_id)
+                
                 # Registra subscription para recompensas
                 await self._registrar_subscription(session_id)
+                
+                # Mensagem final de status
+                console.print(f"\n{em(':rocket:')} [bold green]Bot está rodando e aguardando resgates![/]")
+                console.print(f"{em(':information:')} [dim]Pressione Ctrl+C para parar o bot[/]")
                 
                 # Loop principal de escuta
                 await self._escutar_eventos(ws)
@@ -280,13 +427,16 @@ class TexuguitoBot:
                     
                     logger.info(f"🎁 Recompensa '{reward_title}' resgatada por {user_name}")
                     
-                    # Reproduz áudio correspondente
-                    await self._tocar_audio_recompensa(reward_title)
+                    # Reproduz áudio correspondente e mostra log visual
+                    audio_played = await self._tocar_audio_recompensa(reward_title)
+                    
+                    # Log visual da recompensa
+                    self.ui.log_reward_redemption(reward_title, user_name, audio_played)
                     
         except Exception as e:
             logger.error(f"❌ Erro ao processar evento: {e}")
     
-    async def _tocar_audio_recompensa(self, reward_title: str):
+    async def _tocar_audio_recompensa(self, reward_title: str) -> bool:
         """Reproduz áudio baseado na recompensa resgatada"""
         try:
             audio_path = self.audio_validator.get_audio_path(reward_title)
@@ -294,6 +444,7 @@ class TexuguitoBot:
             if audio_path:
                 await self._play_audio(audio_path)
                 logger.info(f"🔊 Áudio reproduzido para recompensa: {reward_title}")
+                return True
             else:
                 logger.warning(f"⚠️ Nenhum áudio configurado para a recompensa: {reward_title}")
                 
@@ -302,9 +453,13 @@ class TexuguitoBot:
                 if fallback_path and Path(fallback_path).exists():
                     await self._play_audio(fallback_path)
                     logger.info(f"🔊 Áudio de fallback reproduzido")
+                    return True
+                
+                return False
                     
         except Exception as e:
             logger.error(f"❌ Erro ao reproduzir áudio para recompensa '{reward_title}': {e}")
+            return False
     
     async def _play_audio(self, file_path: str):
         """Reproduz arquivo de áudio de forma assíncrona"""
@@ -343,26 +498,56 @@ class TexuguitoBot:
 
 async def main():
     """Função principal para inicializar o bot"""
+    # Interface visual
+    ui = VisualInterface()
+    
     try:
+        # Mostra banner inicial
+        ui.show_banner()
+        
         # Verifica variáveis de ambiente necessárias
         required_env_vars = ['CLIENT_ID', 'TOKEN', 'BROADCASTER_ID']
         missing_vars = [var for var in required_env_vars if not os.getenv(var)]
         
         if missing_vars:
-            logger.error(f"❌ Variáveis de ambiente faltando: {', '.join(missing_vars)}")
-            logger.info("💡 Execute setup.py primeiro para configurar as credenciais")
+            console.print(f"{em(':cross_mark:')} [bold red]Variáveis de ambiente faltando:[/] {', '.join(missing_vars)}")
+            console.print(f"{em(':light_bulb:')} [yellow]Execute[/] [bold cyan]setup.py[/] [yellow]primeiro para configurar as credenciais[/]")
             return
         
-        logger.info("🚀 Iniciando Texuguito Bot...")
+        # Progresso de inicialização
+        startup_tasks = [
+            "Carregando configurações",
+            "Inicializando pygame",
+            "Validando arquivos de áudio",
+            "Preparando conexão"
+        ]
+        ui.show_startup_progress(startup_tasks)
         
-        # Cria e executa o bot
+        # Cria o bot
         bot = TexuguitoBot()
+        
+        # Mostra tabela de configurações
+        bot_config = config.get('bot_settings', {})
+        ui.show_config_table(bot_config)
+        
+        # Mostra validação de áudios
+        console.print(f"\n{em(':magnifying_glass_tilted_right:')} [bold cyan]Validando Áudios...[/]")
+        validation_results = bot.audio_validator.validate_audio_files()
+        ui.show_audio_validation(validation_results)
+        
+        # Status antes da conexão
+        console.print(f"\n{em(':satellite:')} [bold blue]Conectando ao EventSub da Twitch...[/]")
+        ui.show_connection_status(False)
+        
+        # Inicia o bot
         await bot.start()
         
     except KeyboardInterrupt:
-        logger.info("⏹️ Bot interrompido pelo usuário")
+        console.print(f"\n{em(':stop_button:')} [bold yellow]Bot interrompido pelo usuário[/]")
+        ui.show_connection_status(False)
     except Exception as e:
-        logger.error(f"💀 Erro fatal na inicialização: {e}")
+        console.print(f"\n{em(':skull:')} [bold red]Erro fatal:[/] {e}")
+        ui.show_connection_status(False)
         raise
 
 if __name__ == "__main__":

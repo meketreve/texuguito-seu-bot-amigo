@@ -111,7 +111,6 @@ O arquivo `config.json` permite configurar:
 
 ## 📋 Dependências
 
-- `twitchio` - Interação com Twitch
 - `pygame` - Reprodução de áudio
 - `websockets` - Conexão em tempo real
 - `requests` - Chamadas HTTP

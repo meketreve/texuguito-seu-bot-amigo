@@ -133,18 +133,7 @@ async def _play_audio(self, file_path: str):
 - 🔄 Reprodução assíncrona (não bloqueia o bot)
 - ⏱️ Aguarda até o áudio terminar antes de tocar outro
 
-### 7. 📱 Comando de Status
-**Novo:** Comando `!status` para verificar estado do bot
-```python
-@commands.command(name='status')
-async def status_command(self, ctx):
-    status_msg = "🤖 **Status do Texuguito Bot**\n"
-    status_msg += f"📡 Conectado: {'✅' if self.is_connected else '❌'}\n"
-    status_msg += f"🎵 Recompensas configuradas: {len(config.get('recompensas_audio', {}))}\n"
-    await ctx.send(status_msg)
-```
-
-### 8. 🎯 Melhorias na Organização do Código
+### 7. 🎯 Melhorias na Organização do Código
 **Estrutura modular:**
 - 🏗️ Classes especializadas (`Config`, `BotLogger`, `AudioValidator`)
 - 📦 Separação clara de responsabilidades
@@ -155,7 +144,6 @@ async def status_command(self, ctx):
 
 ### `requirements.txt` atualizado:
 ```
-twitchio
 pygame
 requests
 websockets
@@ -194,7 +182,7 @@ coloredlogs  # <- Nova dependência
 ### Para o Usuário:
 - 🎯 **Mais estável**: Menos crashes e reconexão automática
 - 🔊 **Melhor experiência**: Volume configurável e fallback de áudio
-- 📊 **Visibilidade**: Comando de status para monitoramento
+- 📊 **Visibilidade**: Logs detalhados para monitoramento
 - 🎨 **Interface melhor**: Logs coloridos e informativos
 
 ## 🏁 Conclusão

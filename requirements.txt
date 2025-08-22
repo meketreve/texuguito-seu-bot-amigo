@@ -1,6 +1,7 @@
-twitchio
 pygame
 requests
 websockets
 python-dotenv
 coloredlogs
+rich
+emoji
