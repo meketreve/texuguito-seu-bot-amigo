@@ -1,1 +1,44 @@
+<<<<<<< HEAD
 .env
+files/
+logs/
+=======
+# Arquivos de credenciais
+.env
+.env.*
+*.env
+
+# Backups (podem conter credenciais)
+*.backup
+backups/
+
+# Logs (podem conter informações sensíveis)
+logs/
+*.log
+
+# Cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Arquivos temporários
+*.tmp
+*.temp
+
+# Arquivos de áudio (podem ser grandes)
+files/audio/
+files/sounds/
+
+# IDE/Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+>>>>>>> 15c8251eb3496dfa0aece22efad0b288d44b94ab
