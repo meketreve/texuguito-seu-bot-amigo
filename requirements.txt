@@ -1,10 +1,4 @@
-<<<<<<< HEAD
-twitchio==3.1.0
-pygame==2.6.1
-requests==2.32.5
-websockets==15.0.1
-python-dotenv==1.2.1
-=======
+twitchio==2.10.0
 pygame
 requests
 websockets
@@ -12,4 +6,4 @@ python-dotenv
 coloredlogs
 rich
 emoji
->>>>>>> 15c8251eb3496dfa0aece22efad0b288d44b94ab
+gTTS
