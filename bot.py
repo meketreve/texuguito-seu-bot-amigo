@@ -104,13 +104,72 @@ class PointsManager:
 
 # Env Variables
 CLIENT_ID = os.getenv("CLIENT_ID")
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 TOKEN = os.getenv("TOKEN", "")
 if TOKEN.startswith("oauth:"): TOKEN = TOKEN.replace("oauth:", "")
+REFRESH_TOKEN = os.getenv("REFRESH_TOKEN", "")
 BROADCASTER_ID = os.getenv("BROADCASTER_ID")
 CHANNEL = os.getenv("CHANNEL", "meketreve").lower()
 POINTS_REWARD = 5
 CHECK_INTERVAL = 60
 FILES_DIR = os.path.join(os.path.dirname(__file__), "files")
+
+class TokenManager:
+    """Gerencia a renovação automática de tokens do Twitch"""
+    @staticmethod
+    def refresh_token():
+        global TOKEN, REFRESH_TOKEN
+        
+        if not all([CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN]):
+            logger.error("❌ CLIENT_ID, CLIENT_SECRET ou REFRESH_TOKEN faltando para renovação!")
+            return False
+
+        url = "https://id.twitch.tv/oauth2/token"
+        payload = {
+            "client_id": CLIENT_ID,
+            "client_secret": CLIENT_SECRET,
+            "grant_type": "refresh_token",
+            "refresh_token": REFRESH_TOKEN
+        }
+        
+        try:
+            logger.info("🔄 Tentando renovar o token de acesso...")
+            response = requests.post(url, data=payload, timeout=10)
+            data = response.json()
+            
+            if response.status_code == 200:
+                TOKEN = data["access_token"]
+                REFRESH_TOKEN = data.get("refresh_token", REFRESH_TOKEN)
+                
+                # Atualiza o arquivo .env
+                TokenManager.update_env(TOKEN, REFRESH_TOKEN)
+                logger.info("✅ Token renovado e arquivo .env atualizado com sucesso!")
+                return True
+            else:
+                logger.error(f"❌ Falha ao renovar token: {data.get('message', 'Erro desconhecido')}")
+                return False
+        except Exception as e:
+            logger.error(f"❌ Erro na requisição de refresh: {e}")
+            return False
+
+    @staticmethod
+    def update_env(new_token, new_refresh):
+        """Atualiza fisicamente o arquivo .env com os novos valores"""
+        env_path = Path(".env")
+        if not env_path.exists(): return
+        
+        lines = []
+        with open(env_path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+            
+        with open(env_path, "w", encoding="utf-8") as f:
+            for line in lines:
+                if line.startswith("TOKEN="):
+                    f.write(f"TOKEN={new_token}\n")
+                elif line.startswith("REFRESH_TOKEN="):
+                    f.write(f"REFRESH_TOKEN={new_refresh}\n")
+                else:
+                    f.write(line)
 
 def escanear_audios():
     audios = {}
@@ -333,13 +392,20 @@ class TexuguitoBot(commands.Bot):
 async def main():
     ui = VisualInterface()
     ui.show_banner()
-    if not all([CLIENT_ID, TOKEN, BROADCASTER_ID]):
-        print("❌ Faltam credenciais no .env!")
+    
+    if not all([CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, BROADCASTER_ID]):
+        print("❌ Faltam credenciais no .env! Rode o setup.bat primeiro.")
         return
+    
+    # Tenta renovar o token antes de iniciar para garantir conexão
+    if not TokenManager.refresh_token():
+        logger.warning("⚠️ Não foi possível renovar o token, tentando conectar com o token atual...")
+
     try: pygame.mixer.init()
     except: pass
+    
     bot = TexuguitoBot()
-    ui.show_config_table({"Canal": CHANNEL, "Points": f"{POINTS_REWARD}/min"})
+    ui.show_config_table({"Canal": CHANNEL, "Points": f"{POINTS_REWARD}/min", "Status": "Autenticando..."})
     await bot.start()
 
 if __name__ == "__main__":
