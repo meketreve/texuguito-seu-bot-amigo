@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Dict, Optional
 from gtts import gTTS
 import tempfile
+import random
+
 
 # TwitchIO stable 2.10.0
 from twitchio.ext import commands
@@ -110,7 +112,7 @@ if TOKEN.startswith("oauth:"): TOKEN = TOKEN.replace("oauth:", "")
 REFRESH_TOKEN = os.getenv("REFRESH_TOKEN", "")
 BROADCASTER_ID = os.getenv("BROADCASTER_ID")
 CHANNEL = os.getenv("CHANNEL", "meketreve").lower()
-POINTS_REWARD = 5
+POINTS_REWARD = 1
 CHECK_INTERVAL = 60
 FILES_DIR = os.path.join(os.path.dirname(__file__), "files")
 
@@ -198,6 +200,15 @@ class TexuguitoBot(commands.Bot):
         self.audios_chat = escanear_audios()
         self.last_chatters = set()
         self.audio_volume = 1.0
+        
+        # Estado do Sorteio
+        self.raffle_active = False
+        self.raffle_points = 0
+        self.raffle_participants = set()
+        self.raffle_task = None
+        self.last_audio_time = 0
+
+
 
     async def event_ready(self):
         logger.info(f"✅ BOT ONLINE NO CANAL: {CHANNEL}")
@@ -229,16 +240,29 @@ class TexuguitoBot(commands.Bot):
         if not nome:
             await ctx.send("❌ Use: !p <nome>")
             return
+        
+        # Cooldown de 1 minuto
+        cd = 60
+        now = time.time()
+        elapsed = now - self.last_audio_time
+        if elapsed < cd:
+            restante = int(cd - elapsed)
+            await ctx.send(f"⏳ Cooldown ativo! Aguarde mais {restante} segundos.")
+            return
+
         nome = nome.lower()
         if nome in self.audios_chat:
             audio = self.audios_chat[nome]
             if self.points_manager.remove_points(ctx.author.name, audio['custo']):
+                # Atualiza o timestamp apenas se os pontos forem removidos e o áudio for tocar
+                self.last_audio_time = now
                 await self._play_audio(audio["path"])
                 await ctx.send(f"🔊 Tocando: {nome}. Saldo: {self.points_manager.get_points(ctx.author.name)} pts.")
             else:
                 await ctx.send(f"❌ Pontos insuficientes!")
         else:
             await ctx.send(f"❌ Áudio '{nome}' não encontrado.")
+
 
     @commands.command(name="addpoints", aliases=["dar", "give"])
     async def addpoints_cmd(self, ctx, user: str = None, amount: int = None):
@@ -260,11 +284,12 @@ class TexuguitoBot(commands.Bot):
     async def comandos_cmd(self, ctx):
         comandos = [
             "!pontos", "!p <nome>", "!tts <msg>", "!audios", 
-            "!stop", "!status", "!ping"
+            "!stop", "!status", "!ping", "!join"
         ]
         if ctx.author.is_mod or str(ctx.author.id) == BROADCASTER_ID:
             comandos.append("!addpoints <@user> <qtd>")
             comandos.append("!reload")
+            comandos.append("!sorteio <pts> <min>")
             
         await ctx.send(f"🤖 Comandos disponíveis: {', '.join(comandos)}")
 
@@ -354,6 +379,63 @@ class TexuguitoBot(commands.Bot):
     async def stop_cmd(self, ctx):
         pygame.mixer.music.stop()
         await ctx.send("⏹️ Áudio parado!")
+
+    @commands.command(name="sorteio")
+    async def sorteio_cmd(self, ctx, pontos: int = None, minutos: int = None):
+        # Apenas Broadcaster
+        if str(ctx.author.id) != BROADCASTER_ID:
+            return
+
+        if self.raffle_active:
+            await ctx.send("❌ Já existe um sorteio em andamento!")
+            return
+
+        if pontos is None or minutos is None or pontos <= 0 or minutos <= 0:
+            await ctx.send("❌ Use: !sorteio <pontos> <minutos>")
+            return
+
+        self.raffle_active = True
+        self.raffle_points = pontos
+        self.raffle_participants = set()
+        
+        await ctx.send(f"🎉 [SORTEIO] Um sorteio de {pontos} pontos começou! Digite !join para participar. Tempo: {minutos} min.")
+        logger.info(f"🎁 [SORTEIO] Iniciado por {ctx.author.name}: {pontos} pts, {minutos} min.")
+        
+        # Inicia a tarefa do sorteio
+        self.raffle_task = asyncio.create_task(self.run_raffle(minutos, pontos, ctx))
+
+    @commands.command(name="join")
+    async def join_cmd(self, ctx):
+        if not self.raffle_active:
+            return
+        
+        user = ctx.author.name.lower()
+        if user in self.raffle_participants:
+            return # Já está participando
+            
+        self.raffle_participants.add(user)
+        # Feedback silencioso ou discreto para não poluir o chat se quiser
+        # await ctx.send(f"✅ {ctx.author.name} entrou no sorteio!")
+
+    async def run_raffle(self, minutos, pontos, ctx):
+        await asyncio.sleep(minutos * 60)
+        
+        self.raffle_active = False
+        if not self.raffle_participants:
+            await ctx.send("⚠️ O sorteio terminou, mas não houve participantes.")
+            logger.info("🎁 [SORTEIO] Terminado sem participantes.")
+            return
+
+        ganhador = random.choice(list(self.raffle_participants))
+        self.points_manager.add_points(ganhador, pontos)
+        
+        await ctx.send(f"🎊 PARABÉNS @{ganhador}! Você ganhou o sorteio de {pontos} pontos! 🥳")
+        logger.info(f"🎊 [SORTEIO] O ganhador foi {ganhador} ({pontos} pts).")
+        
+        # Reset do estado
+        self.raffle_points = 0
+        self.raffle_participants = set()
+        self.raffle_task = None
 
     async def points_loop(self):
         while True:

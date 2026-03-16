@@ -1,0 +1,66 @@
+{
+    "workflow_version": "1.2.0",
+    "timestamps": {
+        "started": "2026-02-08T16:15:00Z",
+        "last_updated": "2026-02-08T16:20:00Z"
+    },
+    "mode": "initial_scan",
+    "scan_level": "quick",
+    "project_root": "d:\\OneDrive\\Documents\\GitHub\\texuguito-seu-bot-amigo",
+    "output_folder": "d:\\OneDrive\\Documents\\GitHub\\texuguito-seu-bot-amigo\\docs",
+    "completed_steps": [
+        {
+            "step": "step_1",
+            "status": "completed",
+            "timestamp": "2026-02-08T16:16:00Z",
+            "summary": "Classified as monolith with 1 part (Python)"
+        },
+        {
+            "step": "step_2",
+            "status": "completed",
+            "timestamp": "2026-02-08T16:17:00Z",
+            "summary": "Found 2 existing docs"
+        },
+        {
+            "step": "step_3",
+            "status": "completed",
+            "timestamp": "2026-02-08T16:18:00Z",
+            "summary": "Analyzed tech stack (TwitchIO, Pygame)"
+        },
+        {
+            "step": "step_4",
+            "status": "completed",
+            "timestamp": "2026-02-08T16:19:00Z",
+            "summary": "Generated overview and source tree"
+        },
+        {
+            "step": "step_5",
+            "status": "completed",
+            "timestamp": "2026-02-08T16:20:00Z",
+            "summary": "Generated architecture and dev guide"
+        },
+        {
+            "step": "step_10",
+            "status": "completed",
+            "timestamp": "2026-02-08T16:20:00Z",
+            "summary": "Master index generated"
+        }
+    ],
+    "current_step": "completed",
+    "findings": {
+        "project_classification": "Python Monolith Bot",
+        "tech_stack": {
+            "language": "Python 3.10+",
+            "framework": "TwitchIO",
+            "data_storage": "points.json"
+        }
+    },
+    "outputs_generated": [
+        "project-scan-report.json",
+        "project-overview.md",
+        "source-tree-analysis.md",
+        "architecture.md",
+        "development-guide.md",
+        "index.md"
+    ]
+}

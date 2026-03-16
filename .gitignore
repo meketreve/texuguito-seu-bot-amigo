@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-.env
-files/
-logs/
-=======
 # Arquivos de credenciais
 .env
 .env.*
@@ -41,4 +36,16 @@ files/sounds/
 .DS_Store
 Thumbs.db
 desktop.ini
->>>>>>> 15c8251eb3496dfa0aece22efad0b288d44b94ab
+
+# BMAD Core & Agent Files
+_bmad/
+_bmad-output/
+.agent/
+.env.bmad
+.gemini/
+task.md
+implementation_plan.md
+walkthrough.md
+tech-spec.md
+
+
