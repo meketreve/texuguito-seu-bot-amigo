@@ -1,59 +1,79 @@
-# 🦡 Texuguito Bot - Seu Bot Amigo 🎵
+# Texuguito Bot - Seu Bot Amigo
 
-O **Texuguito Bot** é uma aplicação para streamers da Twitch que permite aos espectadores dispararem áudios no seu computador usando um sistema de pontos local baseado na atividade no chat.
+Bot para Twitch que permite espectadores tocarem áudios usando pontos locais.
 
-## 🚀 Como Funciona
+## Como Funciona
 
-1.  **Ganhe Pontos**: Fique no chat e interaja! A cada 5 minutos, o bot verifica quem está presente. Se você estiver lá por dois ciclos seguidos, ganha **50 pontos**.
-2.  **Toque Áudios**: Use o comando `!p <nome>` para tocar um áudio. Cada áudio tem um custo baseado na pasta onde ele está localizado.
-3.  **Comandos principais**:
-    *   `!pontos`: Veja seu saldo de pontos.
-    *   `!p <nome>`: Toca o áudio se você tiver saldo.
-    *   `!audios`: Lista os sons disponíveis e seus preços.
+- Espectadores ganham **1 ponto por minuto** ativos no chat (presentes em 2 checks seguidos de 60s)
+- Usam pontos para tocar áudios (`!p <nome>`) ou TTS (`!tts <msg>`)
+- Broadcaster pode sorteios de pontos (`!sorteio`)
 
 ---
 
-## 🛠️ Configuração Inicial
+## Configuração
 
-### 1. Requisitos
-*   Python 3.10 ou superior.
-*   Bibliotecas: `pip install -r requirements.txt`
+### Requisitos
 
-### 2. Credenciais da Twitch
-Você precisará de um App no [Twitch Dev Console](https://dev.twitch.tv/console/apps).
-1.  Redirect URI: `http://localhost:3000`
-2.  Execute `python setup.py` e siga as instruções para gerar seu `.env`.
+- Python 3.10+
+- `pip install -r requirements.txt`
 
-### 3. Organização dos Áudios
-Coloque seus arquivos `.mp3` na pasta `files/`. Use pastas numeradas para definir o preço:
-*   `files/100/` -> Áudios que custam 100 pontos.
-*   `files/500/` -> Áudios que custam 500 pontos.
-*   `files/0/`   -> Áudios gratuitos.
+### Credenciais
 
----
+Crie um App no [Twitch Dev Console](https://dev.twitch.tv/console/apps) com Redirect URI `http://localhost:3000`.
 
-## 📋 Comandos do Chat
+Execute `python setup.py` para gerar o `.env` com as credenciais.
 
-| Comando | Aliases | Descrição |
-| :--- | :--- | :--- |
-| `!pontos` | `!pts`, `!saldo` | Mostra seu saldo de pontos locais |
-| `!p <nome>` | `!play` | Toca um áudio (ex: `!p oof`) |
-| `!audios` | `!sons` | Lista os áudios disponíveis por categoria de preço |
-| `!stop` | `!parar` | Para o áudio que está tocando no momento |
-| `!reload` | - | Recarrega a lista de áudios (apenas streamer/mods) |
-| `!comandos` | `!help` | Mostra a lista de comandos |
+### Áudios
+
+Coloque arquivos `.mp3/.wav/.ogg` em subpastas numeradas dentro de `files/`:
+
+```
+files/
+  20/    → áudios que custam 20 pts
+  100/   → áudios que custam 100 pts
+  200/   → áudios que custam 200 pts
+  500/   → áudios que custam 500 pts
+```
 
 ---
 
-## ⚙️ Configurações (config.json)
+## Comandos do Chat
 
-*   `audio_volume`: Volume global (0.0 a 1.0).
-*   `max_reconnect_attempts`: Tentativas de conexão com o chat.
-*   `fallback_sound`: Som tocado quando ocorre um erro.
+| Comando | Aliases | Quem pode usar | Descrição |
+| :--- | :--- | :--- | :--- |
+| `!pontos` | `!pts` | Todos | Mostra seu saldo de pontos |
+| `!p <nome>` | `!play` | Todos | Toca um áudio (ex: `!p oof`) |
+| `!tts <msg>` | - | Todos | Text-to-speech (custa 200 pts) |
+| `!audios` | `!sons`, `!sounds` | Todos | Lista áudios disponíveis por preço |
+| `!stop` | - | Todos | Para o áudio atual |
+| `!status` | - | Todos | Status do bot |
+| `!ping` | - | Todos | Verifica se bot está online |
+| `!comandos` | `!help`, `!ajuda` | Todos | Lista de comandos |
+| `!join` | - | Todos | Entra em sorteio ativo |
+| `!reload` | - | Mod/Broadcaster | Recarrega lista de áudios |
+| `!addpoints <@user> <qtd>` | `!dar`, `!give` | Mod/Broadcaster | Adiciona pontos a um usuário |
+| `!sorteio <pts> <min>` | - | Broadcaster | Inicia sorteio de pontos |
 
 ---
 
-## 📜 Notas de Versão
-Esta versão utiliza um **sistema de pontos local** salvo em `points.json`, independente dos Pontos de Canal da Twitch. Isso permite maior flexibilidade e automação para todos os integrantes do chat.
+## Configurações (config.json)
 
-Bom streaming! 🦡
+| Chave | Descrição |
+| :--- | :--- |
+| `audio_volume` | Volume global (0.0 a 1.0) |
+| `max_reconnect_attempts` | Tentativas de reconexão ao chat |
+
+---
+
+## Executar
+
+```bash
+# Desenvolvimento
+python bot.py
+
+# Instalar dependências
+install.bat
+
+# Setup credenciais
+setup.bat
+```

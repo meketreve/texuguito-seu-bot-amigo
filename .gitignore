@@ -1,13 +1,16 @@
-# Arquivos de credenciais
+# Credenciais
 .env
 .env.*
 *.env
 
-# Backups (podem conter credenciais)
+# Dados de usuário (não versionar)
+points.json
+
+# Backups
 *.backup
 backups/
 
-# Logs (podem conter informações sensíveis)
+# Logs
 logs/
 *.log
 
@@ -22,9 +25,13 @@ __pycache__/
 *.tmp
 *.temp
 
-# Arquivos de áudio (podem ser grandes)
-files/audio/
-files/sounds/
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Áudios (podem ser grandes)
+files/
 
 # IDE/Editor
 .vscode/
@@ -37,7 +44,7 @@ files/sounds/
 Thumbs.db
 desktop.ini
 
-# BMAD Core & Agent Files
+# BMAD
 _bmad/
 _bmad-output/
 .agent/
@@ -47,5 +54,5 @@ task.md
 implementation_plan.md
 walkthrough.md
 tech-spec.md
-
-
+docs/project-scan-report.json
+docs/source-tree-analysis.md
