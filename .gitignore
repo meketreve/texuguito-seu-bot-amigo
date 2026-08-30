@@ -3,5 +3,5 @@ __pycache__/
 .venv/
 venv/
 .env
-data/viewers.json
+data/viewers.json*
 .superpowers/
