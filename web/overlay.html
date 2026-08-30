@@ -9,6 +9,9 @@
   </style>
 </head>
 <body>
+  <!-- width/height are only a pre-JS fallback; overlay.js sizes the canvas to
+       the window on load and on every resize, so the OBS Browser Source can be
+       any size the streamer picks. -->
   <canvas id="parade" width="1920" height="160"></canvas>
   <script src="/static/overlay.js"></script>
 </body>

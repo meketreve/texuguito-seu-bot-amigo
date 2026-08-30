@@ -9,6 +9,19 @@ function laneY() {
   return canvas.height - PIXEL_SIZE * 13 - 10;
 }
 
+// The OBS Browser Source can be any size the streamer picks, so track the
+// window instead of assuming a hardcoded 1920x160. laneY() and spawnX() both
+// derive from the canvas dimensions, so they adapt on their own; existing
+// viewers keep a y captured at upsert time, so re-seat them onto the new lane.
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const y = laneY();
+  for (const viewer of viewers.values()) {
+    viewer.y = y;
+  }
+}
+
 function spawnX() {
   return canvas.width + Math.random() * 200;
 }
@@ -135,6 +148,9 @@ function tick(timestamp) {
 
   requestAnimationFrame(tick);
 }
+
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
 
 connect();
 requestAnimationFrame(tick);
