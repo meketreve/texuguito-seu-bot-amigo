@@ -50,22 +50,57 @@ class ViewerStore:
         self.load()
 
     def load(self) -> None:
+        """Read viewers.json, degrading to an empty store if it is unreadable.
+
+        Hand-editing this file is the only admin interface the design gives the
+        streamer, and ViewerStore is built at the very top of main(), so a typo'd
+        edit must not brick startup mid-stream. The bad file is moved aside
+        rather than discarded so it can still be inspected or repaired.
+        """
         if not self._path.exists():
             self._viewers = {}
             return
-        raw = json.loads(self._path.read_text(encoding="utf-8"))
-        self._viewers = {name: Viewer(**data) for name, data in raw.items()}
+        try:
+            raw = json.loads(self._path.read_text(encoding="utf-8"))
+            self._viewers = {name: Viewer(**data) for name, data in raw.items()}
+        # ValueError: not valid JSON. TypeError: an entry with wrong/missing
+        # fields. AttributeError: valid JSON whose top level is not an object
+        # (a list or string has no .items()).
+        except (ValueError, TypeError, AttributeError) as exc:
+            print(f"[chat-parade] {self._path} corrompido ou inválido ({exc}); iniciando vazio")
+            corrupt_path = self._path.with_suffix(self._path.suffix + ".corrupt")
+            self._path.replace(corrupt_path)
+            self._viewers = {}
 
     def save(self) -> None:
+        """Write viewers.json atomically.
+
+        A plain write_text truncates first, so a crash mid-write would leave a
+        half-written file that load() then has to quarantine. Writing to a temp
+        file and renaming means readers only ever see a complete file.
+        """
         self._path.parent.mkdir(parents=True, exist_ok=True)
         raw = {name: asdict(viewer) for name, viewer in self._viewers.items()}
-        self._path.write_text(json.dumps(raw, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp_path = self._path.with_suffix(self._path.suffix + ".tmp")
+        tmp_path.write_text(json.dumps(raw, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp_path.replace(self._path)
+
+    def _create(self, username: str) -> bool:
+        """Add a viewer if it is missing. Returns whether anything was created.
+
+        Expects an already-lowercased username, and deliberately does not save:
+        callers decide when to hit the disk, so a batch of creations can share a
+        single write.
+        """
+        if username in self._viewers:
+            return False
+        self._viewers[username] = Viewer(cor=default_color_for(username))
+        self._status[username] = ViewerStatus()
+        return True
 
     def get_or_create(self, username: str) -> Viewer:
         username = username.lower()
-        if username not in self._viewers:
-            self._viewers[username] = Viewer(cor=default_color_for(username))
-            self._status[username] = ViewerStatus()
+        if self._create(username):
             self.save()
         return self._viewers[username]
 
@@ -131,11 +166,18 @@ class ViewerStore:
         joined = usernames - currently_present
         left = currently_present - usernames
 
+        # One write for the whole poll cycle instead of one per new chatter:
+        # get_or_create saves on every creation, so N joiners meant N truncate-
+        # and-rewrite passes over the same file.
+        created_any = False
         for username in joined:
-            self.get_or_create(username)
+            created_any |= self._create(username)
             self.status_for(username).present = True
 
         for username in left:
             self.status_for(username).present = False
+
+        if created_any:
+            self.save()
 
         return joined, left
