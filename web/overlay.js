@@ -16,7 +16,17 @@ function spawnX() {
 function upsertViewer(payload) {
   const existing = viewers.get(payload.username);
   const x = existing ? existing.x : spawnX();
-  viewers.set(payload.username, { ...payload, x, y: laneY() });
+  // The server sends seconds remaining, not booleans: turn them into absolute
+  // deadlines on the same clock tick() uses so drawViewer can re-check them
+  // every frame instead of latching a stale boolean until the next broadcast.
+  const now = performance.now();
+  viewers.set(payload.username, {
+    ...payload,
+    x,
+    y: laneY(),
+    danceUntil: now + (payload.dance_remaining || 0) * 1000,
+    cheerUntil: now + (payload.cheer_remaining || 0) * 1000,
+  });
 }
 
 function removeViewer(username) {
@@ -70,10 +80,12 @@ function drawBadges(viewer, yOffset, width) {
 function drawViewer(viewer, timestamp) {
   const grid = viewer.grid;
   const width = grid[0].length * PIXEL_SIZE;
-  const bounce = viewer.dancing ? Math.abs(Math.sin(timestamp / 120)) * 6 : 0;
+  const dancing = timestamp < viewer.danceUntil;
+  const cheering = timestamp < viewer.cheerUntil;
+  const bounce = dancing ? Math.abs(Math.sin(timestamp / 120)) * 6 : 0;
   const yOffset = viewer.y - bounce;
 
-  if (viewer.cheering) {
+  if (cheering) {
     ctx.beginPath();
     ctx.strokeStyle = "#ffd700";
     ctx.lineWidth = 2;

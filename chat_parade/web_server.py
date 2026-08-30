@@ -25,8 +25,11 @@ def viewer_payload(store: ViewerStore, username: str) -> dict[str, Any]:
         "is_mod": status.is_mod,
         "is_sub": status.is_sub,
         "is_broadcaster": status.is_broadcaster,
-        "dancing": status.dancing_until > time.time(),
-        "cheering": status.cheer_until > time.time(),
+        # Seconds remaining, not a boolean: the client turns these into its own
+        # deadlines and re-checks them every frame. A boolean computed here would
+        # stay true on the client until the next broadcast happened to arrive.
+        "dance_remaining": max(0.0, status.dancing_until - time.time()),
+        "cheer_remaining": max(0.0, status.cheer_until - time.time()),
     }
 
 

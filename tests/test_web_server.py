@@ -1,9 +1,10 @@
 import asyncio
+import time
 
 from fastapi.testclient import TestClient
 
-from chat_parade.viewer_store import ViewerStore
-from chat_parade.web_server import OverlayBroadcaster, create_app
+from chat_parade.viewer_store import ViewerEvent, ViewerStore
+from chat_parade.web_server import OverlayBroadcaster, create_app, viewer_payload
 
 
 class _FakeConnection:
@@ -45,6 +46,35 @@ def test_websocket_snapshot_excludes_absent_viewers(tmp_path):
         data = websocket.receive_json()
 
     assert data["viewers"] == []
+
+
+def test_payload_sends_remaining_seconds_not_booleans(tmp_path):
+    """Regression test: the payload must carry how long the animation still has
+    to run, not a boolean snapshot. A boolean is only true at broadcast time and
+    the client has no way to expire it, so viewers danced forever."""
+    store = ViewerStore(tmp_path / "v.json")
+    store.trigger_dance("fulano")
+    store.trigger_cheer("fulano")
+
+    payload = viewer_payload(store, "fulano")
+
+    assert "dancing" not in payload
+    assert "cheering" not in payload
+    assert 0 < payload["dance_remaining"] <= 4.0
+    assert 0 < payload["cheer_remaining"] <= 4.0
+
+
+def test_payload_remaining_is_zero_once_the_animation_expired(tmp_path):
+    store = ViewerStore(tmp_path / "v.json")
+    store.get_or_create("fulano")
+    status = store.status_for("fulano")
+    status.dancing_until = time.time() - 10
+    status.cheer_until = time.time() - 10
+
+    payload = viewer_payload(store, "fulano")
+
+    assert payload["dance_remaining"] == 0.0
+    assert payload["cheer_remaining"] == 0.0
 
 
 def test_overlay_page_is_served(tmp_path):
