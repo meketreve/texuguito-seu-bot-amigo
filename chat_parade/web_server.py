@@ -65,7 +65,7 @@ class OverlayBroadcaster:
 
     async def _broadcast(self, message: dict[str, Any]) -> None:
         stale = set()
-        for connection in self._connections:
+        for connection in list(self._connections):
             try:
                 await connection.send_json(message)
             except Exception:
