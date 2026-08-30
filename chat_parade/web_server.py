@@ -1,0 +1,97 @@
+from __future__ import annotations
+
+import asyncio
+import time
+from pathlib import Path
+from typing import Any
+
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from chat_parade.avatar import build_avatar_grid
+from chat_parade.viewer_store import ViewerEvent, ViewerStore
+
+WEB_DIR = Path(__file__).resolve().parent.parent / "web"
+
+
+def viewer_payload(store: ViewerStore, username: str) -> dict[str, Any]:
+    viewer = store.get_or_create(username)
+    status = store.status_for(username)
+    return {
+        "username": username,
+        "nick": viewer.nick or username,
+        "grid": build_avatar_grid(username, viewer.cor, viewer.chapeu, viewer.acessorio),
+        "is_mod": status.is_mod,
+        "is_sub": status.is_sub,
+        "is_broadcaster": status.is_broadcaster,
+        "dancing": status.dancing_until > time.time(),
+        "cheering": status.cheer_until > time.time(),
+    }
+
+
+def snapshot_payload(store: ViewerStore) -> dict[str, Any]:
+    present = [
+        viewer_payload(store, name)
+        for name in store.usernames()
+        if store.status_for(name).present
+    ]
+    return {"type": "snapshot", "viewers": present}
+
+
+class OverlayBroadcaster:
+    def __init__(self, store: ViewerStore, events: "asyncio.Queue[ViewerEvent]"):
+        self._store = store
+        self._events = events
+        self._connections: set[WebSocket] = set()
+
+    async def register(self, websocket: WebSocket) -> None:
+        await websocket.accept()
+        self._connections.add(websocket)
+        await websocket.send_json(snapshot_payload(self._store))
+
+    def unregister(self, websocket: WebSocket) -> None:
+        self._connections.discard(websocket)
+
+    async def run(self) -> None:
+        while True:
+            event = await self._events.get()
+            message = {
+                "type": event.type,
+                "username": event.username,
+                "viewer": None if event.type == "left" else viewer_payload(self._store, event.username),
+            }
+            await self._broadcast(message)
+
+    async def _broadcast(self, message: dict[str, Any]) -> None:
+        stale = set()
+        for connection in self._connections:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                stale.add(connection)
+        self._connections -= stale
+
+
+def create_app(
+    store: ViewerStore, events: "asyncio.Queue[ViewerEvent]"
+) -> tuple[FastAPI, OverlayBroadcaster]:
+    app = FastAPI()
+    broadcaster = OverlayBroadcaster(store, events)
+
+    @app.get("/overlay")
+    async def overlay_page() -> FileResponse:
+        return FileResponse(WEB_DIR / "overlay.html")
+
+    app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+
+    @app.websocket("/ws")
+    async def websocket_endpoint(websocket: WebSocket) -> None:
+        await broadcaster.register(websocket)
+        try:
+            while True:
+                await websocket.receive_text()
+        except WebSocketDisconnect:
+            broadcaster.unregister(websocket)
+
+    return app, broadcaster
