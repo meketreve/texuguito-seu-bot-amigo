@@ -1671,7 +1671,7 @@ from chat_parade.config import Config
 from chat_parade.main import build_components
 
 
-def test_build_components_wires_everything_without_network(tmp_path):
+async def test_build_components_wires_everything_without_network(tmp_path):
     config = Config(
         client_id="id",
         token="tok",
