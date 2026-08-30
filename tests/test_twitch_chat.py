@@ -41,14 +41,15 @@ def _make_message(content: str, *, reply: bool, name: str = "fulano") -> Message
     return Message(content=content, author=chatter, channel=None, tags=tags, raw_data="")
 
 
-async def _invoke(bot: ChatParadeBot, command_name: str, ctx) -> None:
-    """Call a command's own coroutine directly.
+async def _invoke(bot: ChatParadeBot, ctx) -> None:
+    """Dispatch a command exactly the way production does.
 
-    Deliberately bypasses ``Command.__call__``, which fans out through
-    ``Client.run_event`` -- unrelated machinery that is not what these tests are
-    exercising. See the fix report for a separate finding about ``run_event``.
+    ``Bot.handle_commands`` calls ``get_context`` then ``invoke``, and ``invoke``
+    fans out through ``Client.run_event`` and ``Command.__call__`` before the
+    command body runs -- so this covers the real path, including the event
+    registry that the viewer-event Queue used to shadow.
     """
-    await bot.commands[command_name]._callback(bot, ctx)
+    await bot.invoke(ctx)
 
 
 async def test_bot_constructs_without_touching_the_network(tmp_path):
@@ -59,7 +60,26 @@ async def test_bot_constructs_without_touching_the_network(tmp_path):
 
     assert bot is not None
     assert bot._store is store
-    assert bot._events is events
+    assert bot._viewer_events is events
+
+
+async def test_viewer_queue_does_not_shadow_twitchio_event_registry(tmp_path):
+    """Regression test: the viewer-event Queue used to be stored as
+    self._events, the same name twitchio's Client uses for its event-listener
+    dict. Client.run_event does `if name in self._events`, so every dispatch
+    raised TypeError - and Bot.invoke fires run_event("command_invoke") before
+    running any command body, so no chat command could ever execute."""
+    store = ViewerStore(tmp_path / "v.json")
+    events: asyncio.Queue = asyncio.Queue()
+
+    bot = ChatParadeBot(_config(tmp_path), store, events)
+
+    # twitchio's own registry is untouched and still a usable mapping.
+    assert isinstance(bot._events, dict)
+    assert ("event_message" in bot._events) is False  # must not raise TypeError
+    # ...and our queue lives somewhere else.
+    assert bot._viewer_events is events
+    assert bot._viewer_events is not bot._events
 
 
 async def test_args_are_not_shifted_for_reply_messages(tmp_path):
@@ -97,7 +117,7 @@ async def test_nick_command_on_reply_message_sets_the_right_nick(tmp_path):
     bot = ChatParadeBot(_config(tmp_path), store, events)
 
     ctx = await bot.get_context(_make_message("@alguem !nick Rei do Chat", reply=True))
-    await _invoke(bot, "nick", ctx)
+    await _invoke(bot, ctx)
 
     assert store.get_or_create("fulano").nick == "Rei do Chat"
     assert events.get_nowait().username == "fulano"
@@ -111,7 +131,7 @@ async def test_avatarmod_on_reply_message_targets_the_right_user(tmp_path):
     message = _make_message("@alguem !avatarmod beltrano #00ff00", reply=True)
     message.author._mod = 1  # simulate a moderator
     ctx = await bot.get_context(message)
-    await _invoke(bot, "avatarmod", ctx)
+    await _invoke(bot, ctx)
 
     assert store.get_or_create("beltrano").cor == "#00ff00"
     assert events.get_nowait().username == "beltrano"

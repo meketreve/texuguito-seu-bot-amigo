@@ -29,7 +29,13 @@ class ChatParadeBot(commands.Bot):
             initial_channels=[config.channel],
         )
         self._store = store
-        self._events = events
+        # NOT self._events: twitchio's Client.__init__ already uses that name for
+        # its own event-listener registry (twitchio/client.py:99), and
+        # Client.run_event does `if name in self._events`. Assigning our Queue
+        # there made every run_event call raise TypeError - which killed command
+        # dispatch entirely, since Bot.invoke fires run_event("command_invoke")
+        # before running any command body.
+        self._viewer_events = events
 
     async def event_ready(self) -> None:
         print(f"[chat-parade] conectado ao chat de {self.nick}")
@@ -50,7 +56,9 @@ class ChatParadeBot(commands.Bot):
         if bits and int(bits) > 0:
             self._store.trigger_cheer(message.author.name)
 
-        await self._events.put(ViewerEvent(type="updated", username=message.author.name.lower()))
+        await self._viewer_events.put(
+            ViewerEvent(type="updated", username=message.author.name.lower())
+        )
 
         await self.handle_commands(message)
 
@@ -59,7 +67,7 @@ class ChatParadeBot(commands.Bot):
         if reply:
             await ctx.send(reply)
         if event:
-            await self._events.put(event)
+            await self._viewer_events.put(event)
 
     @commands.command(name="cor")
     async def cor_cmd(self, ctx: commands.Context) -> None:
