@@ -40,11 +40,19 @@ function initialDirection(username) {
   return hashUsername(username) % 2 === 0 ? 1 : -1;
 }
 
-// +/-25% around the base speed, deterministic per username, so the parade
-// doesn't move as one rigid block.
+// +/-25% around the base speed, so the parade doesn't move as one rigid block.
+const SPEED_MIN_FACTOR = 0.75;
+const SPEED_SPREAD_FACTOR = 0.5;
+
+// Deterministic per-username speed, used only for the initial spawn.
 function individualSpeed(username) {
   const spread = Math.abs(hashUsername(username + "speed")) % 100;
-  return SPEED_PX_PER_SEC * (0.75 + (spread / 100) * 0.5);
+  return SPEED_PX_PER_SEC * (SPEED_MIN_FACTOR + (spread / 100) * SPEED_SPREAD_FACTOR);
+}
+
+// Genuinely random speed, re-rolled every time a viewer bounces off an edge.
+function randomSpeed() {
+  return SPEED_PX_PER_SEC * (SPEED_MIN_FACTOR + Math.random() * SPEED_SPREAD_FACTOR);
 }
 
 function upsertViewer(payload) {
@@ -168,13 +176,16 @@ function tick(timestamp) {
     viewer.x += viewer.direction * viewer.speed * deltaSeconds;
 
     // Patrol back and forth instead of vanishing off one edge and
-    // reappearing on the other.
+    // reappearing on the other. Re-roll speed on every bounce so it keeps
+    // varying over time, not just once at spawn.
     if (viewer.x <= 0) {
       viewer.x = 0;
       viewer.direction = 1;
+      viewer.speed = randomSpeed();
     } else if (viewer.x >= canvas.width - width) {
       viewer.x = canvas.width - width;
       viewer.direction = -1;
+      viewer.speed = randomSpeed();
     }
 
     drawViewer(viewer, timestamp);
