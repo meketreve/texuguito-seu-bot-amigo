@@ -23,7 +23,15 @@ def build_components(config: Config):
 async def _run_web_server(app, port: int) -> None:
     server_config = uvicorn.Config(app, host="0.0.0.0", port=port, log_level="warning")
     server = uvicorn.Server(server_config)
-    await server.serve()
+    serve_task = asyncio.ensure_future(server.serve())
+    try:
+        await asyncio.shield(serve_task)
+    except asyncio.CancelledError:
+        # Ask uvicorn to shut down on its own terms instead of cancelling it
+        # mid-lifespan, which otherwise logs a spurious CancelledError traceback.
+        server.should_exit = True
+        await serve_task
+        raise
 
 
 async def _run_until_error(*coroutines) -> None:
