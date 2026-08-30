@@ -66,6 +66,10 @@ def test_validate_nick_returns_none_for_empty_result():
     assert validate_nick("!!!@@@") is None
 
 
+def test_validate_nick_strips_embedded_control_whitespace():
+    assert validate_nick("Rei\ndo\tChat") == "ReidoChat"
+
+
 def test_handle_cor_updates_store_on_valid_color(tmp_path):
     store = ViewerStore(tmp_path / "v.json")
     reply, event = handle_cor(store, "fulano", ["#123456"])

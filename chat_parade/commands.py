@@ -10,7 +10,7 @@ from chat_parade.viewer_store import ViewerEvent, ViewerStore
 HATS = ("boné", "coroa", "chifres", "nenhum")
 ACCESSORIES = ("óculos", "capa", "asas", "nenhum")
 NICK_MAX_LENGTH = 16
-_NICK_PATTERN = re.compile(r"[^\w\sÀ-ÿ]", re.UNICODE)
+_NICK_PATTERN = re.compile(r"[^\w À-ÿ]", re.UNICODE)
 _HEX_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
