@@ -40,11 +40,19 @@ function initialDirection(username) {
   return hashUsername(username) % 2 === 0 ? 1 : -1;
 }
 
+// +/-25% around the base speed, deterministic per username, so the parade
+// doesn't move as one rigid block.
+function individualSpeed(username) {
+  const spread = Math.abs(hashUsername(username + "speed")) % 100;
+  return SPEED_PX_PER_SEC * (0.75 + (spread / 100) * 0.5);
+}
+
 function upsertViewer(payload) {
   const existing = viewers.get(payload.username);
   const width = payload.grid[0].length * PIXEL_SIZE;
   const x = existing ? existing.x : randomX(width);
   const direction = existing ? existing.direction : initialDirection(payload.username);
+  const speed = existing ? existing.speed : individualSpeed(payload.username);
   // The server sends seconds remaining, not booleans: turn them into absolute
   // deadlines on the same clock tick() uses so drawViewer can re-check them
   // every frame instead of latching a stale boolean until the next broadcast.
@@ -54,6 +62,7 @@ function upsertViewer(payload) {
     x,
     y: laneY(),
     direction,
+    speed,
     danceUntil: now + (payload.dance_remaining || 0) * 1000,
     cheerUntil: now + (payload.cheer_remaining || 0) * 1000,
   });
@@ -156,7 +165,7 @@ function tick(timestamp) {
 
   for (const viewer of viewers.values()) {
     const width = viewer.grid[0].length * PIXEL_SIZE;
-    viewer.x += viewer.direction * SPEED_PX_PER_SEC * deltaSeconds;
+    viewer.x += viewer.direction * viewer.speed * deltaSeconds;
 
     // Patrol back and forth instead of vanishing off one edge and
     // reappearing on the other.
