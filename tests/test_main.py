@@ -20,6 +20,24 @@ async def test_run_until_error_prints_friendly_message_on_auth_failure(capsys):
     assert "token da Twitch invalido ou expirado" in captured.out
 
 
+async def test_run_until_error_cancels_other_tasks_on_auth_failure():
+    was_cancelled = asyncio.Event()
+
+    async def raise_auth_error():
+        raise twitchio.errors.AuthenticationError("bad token")
+
+    async def never_finishes():
+        try:
+            await asyncio.sleep(10)
+        except asyncio.CancelledError:
+            was_cancelled.set()
+            raise
+
+    await _run_until_error(raise_auth_error(), never_finishes())
+
+    assert was_cancelled.is_set()
+
+
 async def test_run_until_error_propagates_other_exceptions():
     async def raise_value_error():
         raise ValueError("something else broke")

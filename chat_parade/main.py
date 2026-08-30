@@ -27,8 +27,16 @@ async def _run_web_server(app, port: int) -> None:
 
 
 async def _run_until_error(*coroutines) -> None:
+    tasks = [asyncio.ensure_future(coro) for coro in coroutines]
     try:
-        await asyncio.gather(*coroutines)
+        done, pending = await asyncio.wait(tasks, return_when=asyncio.FIRST_EXCEPTION)
+        for task in pending:
+            task.cancel()
+        await asyncio.gather(*pending, return_exceptions=True)
+        for task in done:
+            exc = task.exception()
+            if exc is not None:
+                raise exc
     except twitchio.errors.AuthenticationError:
         print("[chat-parade] token da Twitch invalido ou expirado.")
         print("[chat-parade] gere um token novo (veja 'Se o token expirar' no README) e tente de novo.")
