@@ -9,6 +9,18 @@ from chat_parade.config import Config
 from chat_parade.viewer_store import ViewerEvent, ViewerStore
 
 
+def _args(ctx: commands.Context) -> list[str]:
+    """Command arguments as already parsed by twitchio.
+
+    ``ctx.view.words`` is built by twitchio's own ``StringParser`` *after*
+    ``Bot.get_context`` strips the ``@username`` prefix that Twitch prepends to
+    "Reply" messages, and after the command name itself is popped out. Splitting
+    ``ctx.message.content`` by hand instead would shift every argument by one for
+    any reply-style message.
+    """
+    return list(ctx.view.words.values())
+
+
 class ChatParadeBot(commands.Bot):
     def __init__(self, config: Config, store: ViewerStore, events: "asyncio.Queue[ViewerEvent]"):
         super().__init__(
@@ -51,7 +63,7 @@ class ChatParadeBot(commands.Bot):
 
     @commands.command(name="cor")
     async def cor_cmd(self, ctx: commands.Context) -> None:
-        await self._respond(ctx, ctx.author.name, ctx.message.content.split()[1:], cmds.handle_cor)
+        await self._respond(ctx, ctx.author.name, _args(ctx), cmds.handle_cor)
 
     @commands.command(name="resetcor")
     async def resetcor_cmd(self, ctx: commands.Context) -> None:
@@ -59,15 +71,15 @@ class ChatParadeBot(commands.Bot):
 
     @commands.command(name="chapeu")
     async def chapeu_cmd(self, ctx: commands.Context) -> None:
-        await self._respond(ctx, ctx.author.name, ctx.message.content.split()[1:], cmds.handle_chapeu)
+        await self._respond(ctx, ctx.author.name, _args(ctx), cmds.handle_chapeu)
 
     @commands.command(name="acessorio")
     async def acessorio_cmd(self, ctx: commands.Context) -> None:
-        await self._respond(ctx, ctx.author.name, ctx.message.content.split()[1:], cmds.handle_acessorio)
+        await self._respond(ctx, ctx.author.name, _args(ctx), cmds.handle_acessorio)
 
     @commands.command(name="nick")
     async def nick_cmd(self, ctx: commands.Context) -> None:
-        await self._respond(ctx, ctx.author.name, ctx.message.content.split()[1:], cmds.handle_nick)
+        await self._respond(ctx, ctx.author.name, _args(ctx), cmds.handle_nick)
 
     @commands.command(name="dança", aliases=["danca"])
     async def danca_cmd(self, ctx: commands.Context) -> None:
@@ -79,7 +91,7 @@ class ChatParadeBot(commands.Bot):
         await self._respond(
             ctx,
             ctx.author.name,
-            ctx.message.content.split()[1:],
+            _args(ctx),
             cmds.handle_avatarmod,
             is_privileged=is_privileged,
         )
