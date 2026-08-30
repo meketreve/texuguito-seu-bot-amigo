@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import time
 
 from fastapi.testclient import TestClient
@@ -87,6 +88,74 @@ def test_overlay_page_is_served(tmp_path):
 
     assert response.status_code == 200
     assert b"parade" in response.content
+
+
+async def _drain(broadcaster: OverlayBroadcaster, events: asyncio.Queue) -> None:
+    """Run OverlayBroadcaster.run() long enough to consume the queued events.
+
+    _FakeConnection.send_json never suspends, so a handful of event-loop turns is
+    more than enough for run() to process everything already on the queue.
+    """
+    task = asyncio.create_task(broadcaster.run())
+    try:
+        for _ in range(10):
+            await asyncio.sleep(0)
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+    assert events.empty()
+
+
+async def test_run_skips_updates_for_viewers_that_are_not_present(tmp_path):
+    """Regression test: !avatarmod accepts any username a mod types, including
+    one never seen in chat. get_or_create makes a ViewerStatus with
+    present=False, and sync_present_chatters can never emit "left" for someone
+    who was never present - so broadcasting the update stranded a ghost avatar
+    on the overlay until the browser source was reloaded."""
+    store = ViewerStore(tmp_path / "v.json")
+    store.get_or_create("nunca-visto")  # never marked present
+    events: asyncio.Queue = asyncio.Queue()
+    broadcaster = OverlayBroadcaster(store, events)
+    connection = _FakeConnection()
+    broadcaster._connections.add(connection)
+
+    await events.put(ViewerEvent(type="updated", username="nunca-visto"))
+    await _drain(broadcaster, events)
+
+    assert connection.received == []
+
+
+async def test_run_broadcasts_updates_for_present_viewers(tmp_path):
+    store = ViewerStore(tmp_path / "v.json")
+    store.mark_status_from_message("presente", is_mod=False, is_sub=False, is_broadcaster=False)
+    events: asyncio.Queue = asyncio.Queue()
+    broadcaster = OverlayBroadcaster(store, events)
+    connection = _FakeConnection()
+    broadcaster._connections.add(connection)
+
+    await events.put(ViewerEvent(type="updated", username="presente"))
+    await _drain(broadcaster, events)
+
+    assert len(connection.received) == 1
+    assert connection.received[0]["type"] == "updated"
+    assert connection.received[0]["viewer"]["username"] == "presente"
+
+
+async def test_run_always_broadcasts_left_events(tmp_path):
+    """A "left" event is emitted precisely when present has just flipped to
+    False, so the presence guard must never suppress it."""
+    store = ViewerStore(tmp_path / "v.json")
+    store.get_or_create("saiu")
+    events: asyncio.Queue = asyncio.Queue()
+    broadcaster = OverlayBroadcaster(store, events)
+    connection = _FakeConnection()
+    broadcaster._connections.add(connection)
+
+    await events.put(ViewerEvent(type="left", username="saiu"))
+    await _drain(broadcaster, events)
+
+    assert connection.received == [{"type": "left", "username": "saiu", "viewer": None}]
 
 
 async def test_broadcast_survives_connection_registered_mid_broadcast(tmp_path):

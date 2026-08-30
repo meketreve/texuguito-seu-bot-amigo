@@ -59,6 +59,12 @@ class OverlayBroadcaster:
     async def run(self) -> None:
         while True:
             event = await self._events.get()
+            # snapshot_payload only ever includes present viewers, so relaying an
+            # update for an absent one would put an avatar on the overlay that
+            # sync_present_chatters can never emit a "left" event for. !avatarmod
+            # can name any username a mod types, including one never seen in chat.
+            if event.type != "left" and not self._store.status_for(event.username).present:
+                continue
             message = {
                 "type": event.type,
                 "username": event.username,
