@@ -1,5 +1,31 @@
+import asyncio
+
+import pytest
+import twitchio.errors
+
 from chat_parade.config import Config
-from chat_parade.main import build_components
+from chat_parade.main import _run_until_error, build_components
+
+
+async def test_run_until_error_prints_friendly_message_on_auth_failure(capsys):
+    async def raise_auth_error():
+        raise twitchio.errors.AuthenticationError("bad token")
+
+    async def never_finishes():
+        await asyncio.sleep(10)
+
+    await _run_until_error(raise_auth_error(), never_finishes())
+
+    captured = capsys.readouterr()
+    assert "token da Twitch invalido ou expirado" in captured.out
+
+
+async def test_run_until_error_propagates_other_exceptions():
+    async def raise_value_error():
+        raise ValueError("something else broke")
+
+    with pytest.raises(ValueError):
+        await _run_until_error(raise_value_error())
 
 
 async def test_build_components_wires_everything_without_network(tmp_path):

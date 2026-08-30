@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
+import twitchio.errors
 import uvicorn
 
 from chat_parade.chatters_poller import run_chatters_poller
@@ -25,6 +26,14 @@ async def _run_web_server(app, port: int) -> None:
     await server.serve()
 
 
+async def _run_until_error(*coroutines) -> None:
+    try:
+        await asyncio.gather(*coroutines)
+    except twitchio.errors.AuthenticationError:
+        print("[chat-parade] token da Twitch invalido ou expirado.")
+        print("[chat-parade] gere um token novo (veja 'Se o token expirar' no README) e tente de novo.")
+
+
 async def main() -> None:
     config = load_config()
     store, events, app, broadcaster, bot = build_components(config)
@@ -32,7 +41,7 @@ async def main() -> None:
     print(f"[chat-parade] overlay pronto em: http://localhost:{config.overlay_port}/overlay")
     print("[chat-parade] cole essa URL como Browser Source no OBS.")
 
-    await asyncio.gather(
+    await _run_until_error(
         bot.start(),
         run_chatters_poller(config, store, events),
         broadcaster.run(),
