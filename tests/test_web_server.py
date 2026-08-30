@@ -90,6 +90,23 @@ def test_overlay_page_is_served(tmp_path):
     assert b"parade" in response.content
 
 
+def test_overlay_page_and_script_are_never_cached(tmp_path):
+    """Regression test: OBS's Browser Source (and regular browsers) cache the
+    overlay page/JS aggressively. Without a no-store header, editing
+    overlay.js and reloading can silently keep serving the old file."""
+    store = ViewerStore(tmp_path / "v.json")
+    events: asyncio.Queue = asyncio.Queue()
+    app, _ = create_app(store, events)
+
+    client = TestClient(app)
+
+    overlay_response = client.get("/overlay")
+    script_response = client.get("/static/overlay.js")
+
+    assert overlay_response.headers["cache-control"] == "no-store"
+    assert script_response.headers["cache-control"] == "no-store"
+
+
 async def _drain(broadcaster: OverlayBroadcaster, events: asyncio.Queue) -> None:
     """Run OverlayBroadcaster.run() long enough to consume the queued events.
 

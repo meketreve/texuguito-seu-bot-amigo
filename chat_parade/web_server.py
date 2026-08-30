@@ -88,6 +88,15 @@ def create_app(
     app = FastAPI()
     broadcaster = OverlayBroadcaster(store, events)
 
+    @app.middleware("http")
+    async def _no_cache(request, call_next):
+        # OBS's embedded browser (and regular browsers) cache the overlay
+        # page/JS aggressively; without this, editing overlay.js and
+        # reloading the Browser Source can silently keep serving the old file.
+        response = await call_next(request)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
     @app.get("/overlay")
     async def overlay_page() -> FileResponse:
         return FileResponse(WEB_DIR / "overlay.html")
