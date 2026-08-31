@@ -5,7 +5,6 @@ const PIXELS_PER_WALK_FRAME = 8;
 
 const canvas = document.getElementById("parade");
 const ctx = canvas.getContext("2d");
-ctx.imageSmoothingEnabled = false; // pixel art: never interpolate between texels
 
 const viewers = new Map();
 
@@ -76,9 +75,14 @@ function laneY() {
 // window instead of assuming a hardcoded size. laneY() and randomX() both
 // derive from the canvas dimensions, so they adapt on their own; existing
 // viewers keep a y captured at upsert time, so re-seat them onto the new lane.
+//
+// Setting canvas.width/height resets the 2D context to its default state
+// (per spec), which silently flips imageSmoothingEnabled back to true — so
+// it has to be re-applied here, every time, not just once at module load.
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
+  ctx.imageSmoothingEnabled = false; // pixel art: never interpolate between texels
   const y = laneY();
   for (const viewer of viewers.values()) {
     viewer.y = y;
