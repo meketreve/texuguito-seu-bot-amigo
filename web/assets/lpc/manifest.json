@@ -24,5 +24,11 @@
   "wings": {
     "bg": "asas_bg_walk.png",
     "fg": "asas_fg_walk.png"
+  },
+  "content_box": {
+    "x": 14,
+    "y": 12,
+    "w": 36,
+    "h": 52
   }
 }

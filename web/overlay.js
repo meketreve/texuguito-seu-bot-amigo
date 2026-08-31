@@ -5,6 +5,7 @@ const PIXELS_PER_WALK_FRAME = 8;
 
 const canvas = document.getElementById("parade");
 const ctx = canvas.getContext("2d");
+ctx.imageSmoothingEnabled = false; // pixel art: never interpolate between texels
 
 const viewers = new Map();
 
@@ -22,6 +23,11 @@ function loadImage(filename) {
   let img = imageCache.get(filename);
   if (!img) {
     img = new Image();
+    img.failed = false;
+    img.onerror = () => {
+      img.failed = true;
+      console.error(`[chat-parade] falha ao carregar asset: ${filename}`);
+    };
     img.src = `/static/assets/lpc/${filename}`;
     imageCache.set(filename, img);
   }
@@ -29,8 +35,15 @@ function loadImage(filename) {
 }
 
 async function loadManifest() {
-  const response = await fetch("/static/assets/lpc/manifest.json");
-  manifest = await response.json();
+  try {
+    const response = await fetch("/static/assets/lpc/manifest.json");
+    manifest = await response.json();
+  } catch (err) {
+    console.error("[chat-parade] falha ao carregar manifest.json, tentando de novo em 3s:", err);
+    setTimeout(loadManifest, 3000);
+    return;
+  }
+
   frameWidth = manifest.frame_width;
   frameHeight = manifest.frame_height;
 
@@ -41,14 +54,16 @@ async function loadManifest() {
   loadImage(manifest.wings.fg);
 }
 
-// True once every asset the manifest lists has actually finished loading.
-// Guards getShadingMask/getTintedBase: reading getImageData from a canvas
-// that drew an unloaded image returns blank pixels, and caching that would
-// permanently strand a viewer as invisible even after the image loads.
+// True once every asset the manifest lists has settled — either finished
+// loading or failed. A failed image (404, corrupt, decode error) has
+// complete=true and naturalWidth=0 forever, so treating "not yet settled"
+// as the only reason to wait means one bad asset can't block the overlay
+// forever; drawSpriteLayer/getShadingMask separately skip failed images so
+// a single missing asset degrades instead of blanking everything.
 function assetsReady() {
   if (!manifest) return false;
   for (const img of imageCache.values()) {
-    if (!img.complete || img.naturalWidth === 0) return false;
+    if (!img.failed && (!img.complete || img.naturalWidth === 0)) return false;
   }
   return true;
 }
@@ -163,6 +178,9 @@ function walkFrameColumn(distanceWalked) {
 // Grayscale (luminance) render of the composed body+head layer for one walk
 // frame. This is the reusable "shading" that getTintedBase multiplies an
 // arbitrary color against — computed once per frame column, not per viewer.
+// Skips any base layer that failed to load rather than drawing a blank
+// image into the mask (see assetsReady's comment for why a failure can't
+// be allowed to block forever).
 function getShadingMask(frameColumn) {
   let mask = shadingMaskCache.get(frameColumn);
   if (mask) return mask;
@@ -176,7 +194,10 @@ function getShadingMask(frameColumn) {
   const sy = manifest.direction_row.right * frameHeight;
 
   for (const layer of manifest.base_layers) {
-    mctx.drawImage(loadImage(layer), sx, sy, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
+    const img = loadImage(layer);
+    if (!img.failed) {
+      mctx.drawImage(img, sx, sy, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
+    }
   }
 
   const imageData = mctx.getImageData(0, 0, frameWidth, frameHeight);
@@ -222,7 +243,9 @@ function getTintedBase(frameColumn, color) {
   return tinted;
 }
 
+// Skips drawing if `image` failed to load — see assetsReady's comment.
 function drawSpriteLayer(image, frameColumn, x, y) {
+  if (image.failed) return;
   const sx = frameColumn * frameWidth;
   const sy = manifest.direction_row.right * frameHeight;
   ctx.drawImage(image, sx, sy, frameWidth, frameHeight, x, y, frameWidth, frameHeight);
@@ -232,9 +255,12 @@ function drawSpriteLayer(image, frameColumn, x, y) {
 // Layer order: wings-behind, tinted body, hat, accessory, wings-in-front —
 // wings must straddle the body or they render entirely on top of it.
 // Mirrors horizontally when walking left, since only the right-facing row
-// of each sheet is ever loaded.
+// of each sheet is ever loaded. Position is rounded to whole pixels so the
+// browser never bilinear-samples the sprite across a fractional offset.
 function drawCharacter(viewer, frameColumn, x, y) {
   const mirrored = viewer.direction < 0;
+  x = Math.round(x);
+  y = Math.round(y);
 
   ctx.save();
   if (mirrored) {
@@ -250,11 +276,15 @@ function drawCharacter(viewer, frameColumn, x, y) {
 
   ctx.drawImage(getTintedBase(frameColumn, viewer.cor), 0, 0);
 
-  if (viewer.chapeu && manifest.hats[viewer.chapeu]) {
+  if (viewer.chapeu && Object.hasOwn(manifest.hats, viewer.chapeu)) {
     drawSpriteLayer(loadImage(manifest.hats[viewer.chapeu]), frameColumn, 0, 0);
   }
 
-  if (viewer.acessorio && viewer.acessorio !== manifest.wing_accessory && manifest.accessories[viewer.acessorio]) {
+  if (
+    viewer.acessorio &&
+    viewer.acessorio !== manifest.wing_accessory &&
+    Object.hasOwn(manifest.accessories, viewer.acessorio)
+  ) {
     drawSpriteLayer(loadImage(manifest.accessories[viewer.acessorio]), frameColumn, 0, 0);
   }
 
@@ -267,6 +297,10 @@ function drawCharacter(viewer, frameColumn, x, y) {
 
 // --- Per-frame drawing ---
 
+// Sub border and cheer ring hug the character's actual drawn silhouette
+// (manifest.content_box), not the full transparent 64x64 cell — the cell
+// has ~20px of empty margin on most sides, so decorations centered on the
+// full cell would float visibly away from the sprite they're decorating.
 function drawBadges(viewer, yOffset) {
   let label = "";
   if (viewer.is_broadcaster) label = "♛";
@@ -278,9 +312,10 @@ function drawBadges(viewer, yOffset) {
     ctx.fillText(label, viewer.x + frameWidth / 2, yOffset - 14);
   }
   if (viewer.is_sub) {
+    const box = manifest.content_box;
     ctx.strokeStyle = "#f6c90e";
     ctx.lineWidth = 1;
-    ctx.strokeRect(viewer.x - 1, yOffset - 1, frameWidth + 2, frameHeight + 2);
+    ctx.strokeRect(viewer.x + box.x - 1, yOffset + box.y - 1, box.w + 2, box.h + 2);
   }
 }
 
@@ -291,10 +326,11 @@ function drawViewer(viewer, timestamp) {
   const yOffset = viewer.y - bounce;
 
   if (cheering) {
+    const box = manifest.content_box;
     ctx.beginPath();
     ctx.strokeStyle = "#ffd700";
     ctx.lineWidth = 2;
-    ctx.arc(viewer.x + frameWidth / 2, yOffset + frameHeight / 2, frameHeight * 0.7, 0, Math.PI * 2);
+    ctx.arc(viewer.x + frameWidth / 2, yOffset + box.y + box.h / 2, box.h * 0.7, 0, Math.PI * 2);
     ctx.stroke();
   }
 
