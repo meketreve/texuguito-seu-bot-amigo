@@ -18,52 +18,101 @@ só a interpretação deles no render muda.
 
 ## Fonte dos assets
 
-[Universal LPC Spritesheet Character Generator](https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/) —
-confirmado ao vivo no navegador que todos os itens necessários existem:
+[Universal LPC Spritesheet Character Generator](https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/).
+Cada peça do gerador é servida como PNG individual (transparente, já na
+grade de frames do walk-cycle) numa URL própria — não precisa da UI do
+gerador em produção, os arquivos já foram baixados direto por HTTP e
+**já estão versionados em `web/assets/lpc/`** (commit deste spec):
 
-| Campo do avatar | Item LPC escolhido | Categoria |
-| --- | --- | --- |
-| corpo base | Human Male, walk cycle | Body > Body Type > Male |
-| `!chapeu boné` | Leather Cap | Headwear > Hats > Caps |
-| `!chapeu coroa` | Crown | Headwear > Hats > Formal |
-| `!chapeu chifres` | Curled Horns | Head > Appendages |
-| `!acessorio óculos` | Glasses | Headwear > Facial Accessories > Glasses |
-| `!acessorio capa` | Iverness cloak | Torso > Jacket |
-| `!acessorio asas` | Feathered Wings | Body > Wings |
+| Campo do avatar | Item LPC | Arquivo local | Cor/variante |
+| --- | --- | --- | --- |
+| corpo base | Human Male body | `body_walk.png` | tom de pele padrão (light) |
+| corpo base | Human Male head | `head_walk.png` | tom de pele padrão (light) |
+| `!chapeu boné` | Leather Cap | `hat_bone_walk.png` | walnut |
+| `!chapeu coroa` | Crown | `hat_coroa_walk.png` | gold |
+| `!chapeu chifres` | Curled Horns | `chifres_walk.png` | tom de pele padrão (light) |
+| `!acessorio óculos` | Glasses | `oculos_walk.png` | black |
+| `!acessorio capa` | Iverness cloak | `capa_walk.png` | black |
+| `!acessorio asas` | Feathered Wings | `asas_bg_walk.png` + `asas_fg_walk.png` | ash |
+
+**Correção sobre o spec original:** um personagem LPC completo precisa de
+**duas** camadas base, não uma — `body` (tronco/membros) e `head` (cabeça,
+já com olhos) são arquivos separados que sempre se combinam. As duas levam
+o tint de `!cor` juntas (compostas antes de tingir), pra não ficar com
+pescoço de uma cor e corpo de outra.
+
+**Asas têm duas camadas**, não uma: `bg` (atrás do corpo) e `fg` (na
+frente) — sem isso as asas ficam por cima do personagem inteiro, errado
+visualmente. Ordem de composição: `asas_bg` → corpo+cabeça tingidos →
+chapéu → acessório (óculos/capa) → `asas_fg`.
+
+**Geometria confirmada** (todos os 8 arquivos, mesma grade): 576x256px,
+9 colunas x 4 linhas, célula de 64x64px. Linha da direção (`direction_row`
+no manifest): 0=cima, 1=esquerda, 2=baixo, **3=direita** (a única usada —
+overlay.js só anda horizontalmente, espelha pra esquerda via
+`ctx.scale(-1,1)`). Colunas 1-8 são o ciclo de andar (coluna 0 é pose
+parada, não usada). Tudo isso já está em `web/assets/lpc/manifest.json`.
 
 **Licença:** CC-BY-SA 3.0 / GPL 3.0 dual license — exige crédito aos
-autores. A própria ferramenta gera o texto de atribuição exato (botão
-"Credits (TXT)"); esse texto vai pro README numa seção "Créditos". Sem
-redistribuição do gerador em si, sem custo além de manter a atribuição.
+autores. Texto de atribuição capturado do gerador (ver seção Créditos
+abaixo) — falta só a de "Curled Horns" especificamente, que a task do
+README deve regenerar clicando "Credits (TXT)" no gerador com a combinação
+final carregada (rápido, não bloqueia o resto do plano).
 
-**Exportação:** usar "ZIP: Split by item" pra cada combinação necessária —
-dá cada peça (corpo, chapéu, acessório) como PNG transparente separado, na
-mesma grade de frames do walk-cycle, em vez de um único PNG já composto. Se
-na prática o export não separar limpo (a confirmar na implementação), o
-fallback é gerar um PNG já composto por combinação (corpo+chapéu+acessório) —
-mais arquivos, mesma ideia, só perde a independência de camadas.
+## Créditos coletados (pra seção "Créditos" do README)
 
-Todos os arquivos baixados vão pra `web/assets/lpc/`, versionados no repo
-(são pequenos, poucos KB cada).
+```
+body/bodies/male/walk.png
+  'Thick' Male Revised Run/Climb by JaidynReiman (based on ElizaWy's LPC Revised)
+  Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  Authors: bluecarrot16, JaidynReiman, Benjamin K. Smith (BenCreating), Evert,
+  Eliza Wyatt (ElizaWy), TheraHedwig, MuffinElZangano, Durrani,
+  Johannes Sjölund (wulax), Stephen Challener (Redshrike)
+
+head/heads/human/male/walk.png
+  original head by Redshrike, tweaks by BenCreating, modular version by bluecarrot16
+  Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  Authors: bluecarrot16, Benjamin K. Smith (BenCreating), Stephen Challener (Redshrike)
+
+hat/cloth/leather_cap/adult/walk/walnut.png
+  original by Johannes Sjölund (wulax), female by Matthew Krohn, mapped to all
+  frames w/recolors by JaidynReiman
+  Licenses: OGA-BY 3.0, CC-BY-SA 3.0, GPL 3.0
+  Authors: Johannes Sjölund (wulax), Matthew Krohn (Makrohn), JaidynReiman
+
+hat/formal/crown/adult/walk/crown_gold.png
+  Licenses: CC-BY-SA 3.0, GPL 3.0
+  Authors: DarkwallLKE, Charles Sanchez (CharlesGabriel)
+
+head/horns/curled/adult/walk.png
+  Créditos não capturados ainda — regenerar via "Credits (TXT)" no gerador
+  com a combinação final carregada antes de publicar o README.
+
+facial/glasses/glasses/adult/walk/black.png
+  Licenses: OGA-BY 3.0
+  Authors: ElizaWy
+
+torso/jacket/iverness/male/walk/black.png
+  Licenses: CC-BY-SA 3.0, GPL 3.0
+  Authors: bluecarrot16
+
+body/wings/feathered/adult/{bg,fg}/walk/ash.png
+  Original by ElizaWy, added to most remaining frames by JaidynReiman
+  Licenses: OGA-BY 3.0
+  Authors: ElizaWy, Stephen Challener (Redshrike), JaidynReiman
+```
 
 ## Corte de frames (walk-cycle)
 
-LPC exporta o walk-cycle em 4 direções (up/down/left/right), várias colunas
-de frame por direção. Só precisamos de **uma** direção (ex: `right`) — a
-direção oposta é a mesma arte espelhada via `ctx.scale(-1, 1)` no canvas, já
-que o `overlay.js` atual não distingue arte por direção, só posição. Isso
-corta pela metade os frames que precisam ser carregados/fatiados.
-
-Metadados de corte (linha/coluna da direção `right`, largura/altura de
-frame, quantidade de frames do ciclo de walk) ficam num pequeno arquivo
-`web/assets/lpc/manifest.json` — não hardcoded no JS, pra não quebrar se o
-sprite mudar de tamanho depois.
+Geometria e camadas já confirmadas acima e em `manifest.json` — nenhum
+número aqui precisa ser redescoberto durante a implementação.
 
 ## Cor livre (recolor em tempo real)
 
-Só a camada de **corpo base** é tingida pela cor do `!cor` — chapéu e
-acessório mantêm a cor original da arte (mesmo espírito de hoje: coroa é
-sempre dourada, chifres sempre marrom, independente da cor do dono).
+Só as camadas de **corpo base** (`body` + `head`, compostas juntas primeiro)
+são tingidas pela cor do `!cor` — chapéu, chifres e acessório mantêm a cor
+original da arte (mesmo espírito de hoje: coroa é sempre dourada, chifres no
+tom de pele padrão, independente da cor do dono).
 
 Técnica: multiply-tint.
 1. No carregamento, desenha o frame do corpo base num canvas offscreen.

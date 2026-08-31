@@ -1,0 +1,31 @@
+{
+  "frame_width": 64,
+  "frame_height": 64,
+  "sheet_columns": 9,
+  "sheet_rows": 4,
+  "direction_row": {
+    "up": 0,
+    "left": 1,
+    "down": 2,
+    "right": 3
+  },
+  "walk_frame_columns": [1, 2, 3, 4, 5, 6, 7, 8],
+  "base_layers": ["body_walk.png", "head_walk.png"],
+  "hats": {
+    "boné": "hat_bone_walk.png",
+    "coroa": "hat_coroa_walk.png"
+  },
+  "head_extras": {
+    "chifres": "chifres_walk.png"
+  },
+  "accessories": {
+    "óculos": "oculos_walk.png",
+    "capa": "capa_walk.png"
+  },
+  "wings": {
+    "asas": {
+      "bg": "asas_bg_walk.png",
+      "fg": "asas_fg_walk.png"
+    }
+  }
+}
