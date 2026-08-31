@@ -37,8 +37,8 @@ já é transparente).
 | --- | --- | --- |
 | `!cor <nome ou hex>` | Todos, no próprio avatar | Troca a cor do corpo. Nome em português (ex: `azul`), inglês (ex: `blue`) ou hex (`#rrggbb`). |
 | `!resetcor` | Todos, no próprio avatar | Volta pra cor gerada pela seed. |
-| `!chapeu <boné\|coroa\|chifres\|nenhum>` | Todos, no próprio avatar | Troca o chapéu. |
-| `!acessorio <óculos\|capa\|asas\|nenhum>` | Todos, no próprio avatar | Troca o acessório. |
+| `!chapeu <opção>` | Todos, no próprio avatar | Troca o chapéu. Ver opções abaixo. |
+| `!acessorio <opção>` | Todos, no próprio avatar | Troca o acessório. Ver opções abaixo. |
 | `!nick <apelido>` | Todos, no próprio avatar | Nome exibido no rodapé. |
 | `!dança` (ou `!danca`) | Todos, no próprio avatar | Dispara uma animação por alguns segundos. |
 | `!avatarmod <usuario> <cor>` | Mod/Broadcaster | Força a cor do avatar de outro viewer. |
@@ -46,6 +46,16 @@ já é transparente).
 Decorações automáticas (sem comando): sub ativo ganha borda dourada, mod
 ganha a etiqueta "MOD", broadcaster ganha uma coroa (♛), e dar cheer solta um
 anel dourado ao redor do avatar por alguns segundos.
+
+### Chapéus e acessórios disponíveis
+
+`!chapeu`: `boné`, `coroa`, `chifres`, `tricornio`, `bicorne`, `cartola`,
+`tiara`, `coco`, `natalino`, `mago`, `viking`, `elmo`, `legionario`,
+`bandana`, `capuz`, `faixa`, `nenhum`.
+
+`!acessorio`: `óculos`, `capa`, `asas`, `colar`, `cachecol`, `laco`,
+`tapaolho`, `oculosescuros`, `monoculo`, `asasmorcego`, `asasborboleta`,
+`asaslibelula`, `nenhum`.
 
 ## Se o token expirar
 

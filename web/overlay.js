@@ -49,8 +49,10 @@ async function loadManifest() {
   for (const layer of manifest.base_layers) loadImage(layer);
   for (const file of Object.values(manifest.hats)) loadImage(file);
   for (const file of Object.values(manifest.accessories)) loadImage(file);
-  loadImage(manifest.wings.bg);
-  loadImage(manifest.wings.fg);
+  for (const wing of Object.values(manifest.wings)) {
+    loadImage(wing.bg);
+    loadImage(wing.fg);
+  }
 }
 
 // True once every asset the manifest lists has settled — either finished
@@ -274,8 +276,12 @@ function drawCharacter(viewer, frameColumn, x, y) {
     ctx.translate(x, y);
   }
 
-  if (viewer.acessorio === manifest.wing_accessory) {
-    drawSpriteLayer(loadImage(manifest.wings.bg), frameColumn, 0, 0);
+  const wing = Object.hasOwn(manifest.wings, viewer.acessorio)
+    ? manifest.wings[viewer.acessorio]
+    : null;
+
+  if (wing) {
+    drawSpriteLayer(loadImage(wing.bg), frameColumn, 0, 0);
   }
 
   ctx.drawImage(getTintedBase(frameColumn, viewer.cor), 0, 0);
@@ -286,14 +292,14 @@ function drawCharacter(viewer, frameColumn, x, y) {
 
   if (
     viewer.acessorio &&
-    viewer.acessorio !== manifest.wing_accessory &&
+    !wing &&
     Object.hasOwn(manifest.accessories, viewer.acessorio)
   ) {
     drawSpriteLayer(loadImage(manifest.accessories[viewer.acessorio]), frameColumn, 0, 0);
   }
 
-  if (viewer.acessorio === manifest.wing_accessory) {
-    drawSpriteLayer(loadImage(manifest.wings.fg), frameColumn, 0, 0);
+  if (wing) {
+    drawSpriteLayer(loadImage(wing.fg), frameColumn, 0, 0);
   }
 
   ctx.restore();

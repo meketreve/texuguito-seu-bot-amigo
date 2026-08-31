@@ -7,8 +7,40 @@ import webcolors
 
 from chat_parade.viewer_store import ViewerEvent, ViewerStore
 
-HATS = ("boné", "coroa", "chifres", "nenhum")
-ACCESSORIES = ("óculos", "capa", "asas", "nenhum")
+HATS = (
+    "boné",
+    "coroa",
+    "chifres",
+    "tricornio",
+    "bicorne",
+    "cartola",
+    "tiara",
+    "coco",
+    "natalino",
+    "mago",
+    "viking",
+    "elmo",
+    "legionario",
+    "bandana",
+    "capuz",
+    "faixa",
+    "nenhum",
+)
+ACCESSORIES = (
+    "óculos",
+    "capa",
+    "asas",
+    "colar",
+    "cachecol",
+    "laco",
+    "tapaolho",
+    "oculosescuros",
+    "monoculo",
+    "asasmorcego",
+    "asasborboleta",
+    "asaslibelula",
+    "nenhum",
+)
 NICK_MAX_LENGTH = 16
 _NICK_PATTERN = re.compile(r"[^\w À-ÿ]", re.UNICODE)
 _HEX_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")

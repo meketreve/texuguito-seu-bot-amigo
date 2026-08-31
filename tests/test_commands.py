@@ -68,8 +68,42 @@ def test_validate_hat_rejects_unknown():
     assert validate_hat("sombrinha") == (False, None)
 
 
+def test_validate_hat_accepts_new_curated_hats():
+    for name in (
+        "tricornio",
+        "bicorne",
+        "cartola",
+        "tiara",
+        "coco",
+        "natalino",
+        "mago",
+        "viking",
+        "elmo",
+        "legionario",
+        "bandana",
+        "capuz",
+        "faixa",
+    ):
+        assert validate_hat(name) == (True, name)
+
+
 def test_validate_accessory_accepts_known_values():
     assert validate_accessory("capa") == (True, "capa")
+
+
+def test_validate_accessory_accepts_new_curated_accessories():
+    for name in (
+        "colar",
+        "cachecol",
+        "laco",
+        "tapaolho",
+        "oculosescuros",
+        "monoculo",
+        "asasmorcego",
+        "asasborboleta",
+        "asaslibelula",
+    ):
+        assert validate_accessory(name) == (True, name)
 
 
 def test_validate_nick_strips_forbidden_chars_and_truncates():
