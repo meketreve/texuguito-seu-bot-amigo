@@ -1,19 +1,34 @@
 from __future__ import annotations
 
+import hashlib
 import json
+import random
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
-from chat_parade.avatar import default_color_for
-
 DANCE_DURATION_SECONDS = 4.0
 CHEER_DURATION_SECONDS = 4.0
+
+DEFAULT_COLOR_PALETTE = [
+    "#e74c3c", "#3498db", "#2ecc71", "#f1c40f",
+    "#9b59b6", "#1abc9c", "#e67e22", "#34495e",
+]
 
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _seed_int(username: str) -> int:
+    digest = hashlib.sha256(username.lower().encode("utf-8")).hexdigest()
+    return int(digest[:8], 16)
+
+
+def default_color_for(username: str) -> str:
+    rng = random.Random(_seed_int(username) + 2)
+    return rng.choice(DEFAULT_COLOR_PALETTE)
 
 
 @dataclass

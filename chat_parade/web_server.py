@@ -9,7 +9,6 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from chat_parade.avatar import build_avatar_grid
 from chat_parade.viewer_store import ViewerEvent, ViewerStore
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
@@ -21,7 +20,9 @@ def viewer_payload(store: ViewerStore, username: str) -> dict[str, Any]:
     return {
         "username": username,
         "nick": viewer.nick or username,
-        "grid": build_avatar_grid(username, viewer.cor, viewer.chapeu, viewer.acessorio),
+        "cor": viewer.cor,
+        "chapeu": viewer.chapeu,
+        "acessorio": viewer.acessorio,
         "is_mod": status.is_mod,
         "is_sub": status.is_sub,
         "is_broadcaster": status.is_broadcaster,

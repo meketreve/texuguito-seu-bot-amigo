@@ -78,6 +78,24 @@ def test_payload_remaining_is_zero_once_the_animation_expired(tmp_path):
     assert payload["cheer_remaining"] == 0.0
 
 
+def test_payload_sends_raw_cor_chapeu_acessorio_not_a_grid(tmp_path):
+    """Regression test: the client now renders real sprites from these three
+    raw fields directly; a pre-rendered pixel grid is no longer part of the
+    contract, and re-adding one would be dead weight sent over every
+    broadcast."""
+    store = ViewerStore(tmp_path / "v.json")
+    store.set_color("fulano", "#ff8800")
+    store.set_chapeu("fulano", "coroa")
+    store.set_acessorio("fulano", "asas")
+
+    payload = viewer_payload(store, "fulano")
+
+    assert payload["cor"] == "#ff8800"
+    assert payload["chapeu"] == "coroa"
+    assert payload["acessorio"] == "asas"
+    assert "grid" not in payload
+
+
 def test_overlay_page_is_served(tmp_path):
     store = ViewerStore(tmp_path / "v.json")
     events: asyncio.Queue = asyncio.Queue()
