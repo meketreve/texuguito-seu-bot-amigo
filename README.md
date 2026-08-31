@@ -53,10 +53,42 @@ O token é o mesmo app do `texuguito-seu-bot-amigo` — rode `python setup.py`
 naquele projeto de novo pra gerar um token novo e copie os valores pro `.env`
 daqui.
 
+## Créditos
+
+Os avatares usam sprites do [Liberated Pixel Cup](https://lpc.opengameart.org)
+(CC-BY-SA 3.0 / GPL 3.0), gerados via o
+[Universal LPC Spritesheet Character Generator](https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/).
+
+- `body/bodies/male/walk.png` — 'Thick' Male Revised Run/Climb by JaidynReiman
+  (based on ElizaWy's LPC Revised). Autores: bluecarrot16, JaidynReiman,
+  Benjamin K. Smith (BenCreating), Evert, Eliza Wyatt (ElizaWy), TheraHedwig,
+  MuffinElZangano, Durrani, Johannes Sjölund (wulax), Stephen Challener (Redshrike).
+- `head/heads/human/male/walk.png` — original head by Redshrike, tweaks by
+  BenCreating, modular version by bluecarrot16. Autores: bluecarrot16,
+  Benjamin K. Smith (BenCreating), Stephen Challener (Redshrike).
+- `hat/cloth/leather_cap/adult/walk/walnut.png` — original by Johannes
+  Sjölund (wulax), female by Matthew Krohn, mapped to all frames w/recolors
+  by JaidynReiman. Autores: Johannes Sjölund (wulax), Matthew Krohn (Makrohn),
+  JaidynReiman.
+- `hat/formal/crown/adult/walk/crown_gold.png` — Autores: DarkwallLKE,
+  Charles Sanchez (CharlesGabriel).
+- `head/horns/curled/adult/walk.png` — Curled Horns. Créditos exatos a
+  confirmar: gere a combinação final no gerador (corpo + leather cap walnut +
+  crown gold + curled horns + glasses black + iverness cloak black +
+  feathered wings ash) e clique "Credits (TXT)" pra pegar a atribuição
+  completa e correta desse item especificamente.
+- `facial/glasses/glasses/adult/walk/black.png` — Autor: ElizaWy.
+- `torso/jacket/iverness/male/walk/black.png` — Autor: bluecarrot16.
+- `body/wings/feathered/adult/{bg,fg}/walk/ash.png` — original by ElizaWy,
+  added to most remaining frames by JaidynReiman. Autores: ElizaWy,
+  Stephen Challener (Redshrike), JaidynReiman.
+
 ## Testes
 
-`pytest` roda toda a suíte (parsing de comando, geração de avatar, estado
-persistido, servidor web). O comportamento de IRC ao vivo e a animação no
+`pytest` roda toda a suíte (parsing de comando, estado persistido, servidor
+web). A renderização do sprite (fatiamento de frame, composição de camadas,
+recolor) não tem suíte automatizada — ver `docs/superpowers/plans/2026-08-30-lpc-pixelart-avatars.md`
+pra como verificar isso manualmente. O comportamento de IRC ao vivo e a animação no
 navegador só dá pra verificar manualmente: suba o app, abra a URL impressa
 no navegador (ou no Browser Source do OBS) e digite os comandos no chat de
 teste.
