@@ -13,6 +13,54 @@ NICK_MAX_LENGTH = 16
 _NICK_PATTERN = re.compile(r"[^\w À-ÿ]", re.UNICODE)
 _HEX_PATTERN = re.compile(r"^#[0-9a-fA-F]{6}$")
 
+# Hex values match the equivalent CSS3 name exactly (e.g. "verde" == "green",
+# not "lime"), so !cor gives the same result in Portuguese or English.
+PT_COLOR_NAMES: dict[str, str] = {
+    "vermelho": "#ff0000",
+    "verde": "#008000",
+    "verde-limão": "#00ff00",
+    "verde limão": "#00ff00",
+    "verde-claro": "#90ee90",
+    "verde claro": "#90ee90",
+    "verde-escuro": "#006400",
+    "verde escuro": "#006400",
+    "azul": "#0000ff",
+    "azul-claro": "#add8e6",
+    "azul claro": "#add8e6",
+    "azul-escuro": "#00008b",
+    "azul escuro": "#00008b",
+    "azul-marinho": "#000080",
+    "azul marinho": "#000080",
+    "amarelo": "#ffff00",
+    "laranja": "#ffa500",
+    "roxo": "#800080",
+    "violeta": "#ee82ee",
+    "rosa": "#ffc0cb",
+    "rosa-choque": "#ff00ff",
+    "rosa choque": "#ff00ff",
+    "preto": "#000000",
+    "branco": "#ffffff",
+    "cinza": "#808080",
+    "cinza-claro": "#d3d3d3",
+    "cinza claro": "#d3d3d3",
+    "cinza-escuro": "#a9a9a9",
+    "cinza escuro": "#a9a9a9",
+    "marrom": "#a52a2a",
+    "castanho": "#a52a2a",
+    "dourado": "#ffd700",
+    "prateado": "#c0c0c0",
+    "prata": "#c0c0c0",
+    "turquesa": "#40e0d0",
+    "bege": "#f5f5dc",
+    "ciano": "#00ffff",
+    "magenta": "#ff00ff",
+    "vinho": "#800000",
+    "bordô": "#800000",
+    "salmão": "#fa8072",
+    "índigo": "#4b0082",
+    "coral": "#ff7f50",
+}
+
 
 @dataclass
 class ParsedCommand:
@@ -34,8 +82,11 @@ def validate_color(raw: str) -> str | None:
     raw = raw.strip()
     if _HEX_PATTERN.match(raw):
         return raw.lower()
+    lowered = raw.lower()
+    if lowered in PT_COLOR_NAMES:
+        return PT_COLOR_NAMES[lowered]
     try:
-        return webcolors.name_to_hex(raw.lower())
+        return webcolors.name_to_hex(lowered)
     except ValueError:
         return None
 
@@ -68,7 +119,8 @@ def handle_cor(
     cor = validate_color(" ".join(args))
     if cor is None:
         return (
-            f"@{username} cor inválida. Use um nome CSS (ex: blue) ou hex (#rrggbb).",
+            f"@{username} cor inválida. Use um nome em português (ex: azul) ou "
+            "inglês (ex: blue) ou hex (#rrggbb).",
             None,
         )
     store.set_color(username, cor)

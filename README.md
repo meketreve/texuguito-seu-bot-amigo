@@ -35,7 +35,7 @@ já é transparente).
 
 | Comando | Quem pode | Efeito |
 | --- | --- | --- |
-| `!cor <nome ou hex>` | Todos, no próprio avatar | Troca a cor do corpo. |
+| `!cor <nome ou hex>` | Todos, no próprio avatar | Troca a cor do corpo. Nome em português (ex: `azul`), inglês (ex: `blue`) ou hex (`#rrggbb`). |
 | `!resetcor` | Todos, no próprio avatar | Volta pra cor gerada pela seed. |
 | `!chapeu <boné\|coroa\|chifres\|nenhum>` | Todos, no próprio avatar | Troca o chapéu. |
 | `!acessorio <óculos\|capa\|asas\|nenhum>` | Todos, no próprio avatar | Troca o acessório. |

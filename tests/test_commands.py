@@ -41,6 +41,24 @@ def test_validate_color_rejects_garbage():
     assert validate_color("banana123") is None
 
 
+def test_validate_color_accepts_portuguese_name():
+    assert validate_color("azul") == "#0000ff"
+
+
+def test_validate_color_portuguese_matches_equivalent_css_name():
+    # "verde" must equal CSS "green" (#008000), not "lime" (#00ff00) -
+    # otherwise the same color word means different things in each language.
+    assert validate_color("verde") == validate_color("green")
+
+
+def test_validate_color_accepts_portuguese_name_with_hyphen_or_space():
+    assert validate_color("azul-claro") == validate_color("azul claro")
+
+
+def test_validate_color_portuguese_name_is_case_insensitive():
+    assert validate_color("AZUL") == "#0000ff"
+
+
 def test_validate_hat_accepts_known_values():
     assert validate_hat("boné") == (True, "boné")
     assert validate_hat("nenhum") == (True, None)
