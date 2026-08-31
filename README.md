@@ -72,11 +72,8 @@ Os avatares usam sprites do [Liberated Pixel Cup](https://lpc.opengameart.org)
   JaidynReiman.
 - `hat/formal/crown/adult/walk/crown_gold.png` — Autores: DarkwallLKE,
   Charles Sanchez (CharlesGabriel).
-- `head/horns/curled/adult/walk.png` — Curled Horns. Créditos exatos a
-  confirmar: gere a combinação final no gerador (corpo + leather cap walnut +
-  crown gold + curled horns + glasses black + iverness cloak black +
-  feathered wings ash) e clique "Credits (TXT)" pra pegar a atribuição
-  completa e correta desse item especificamente.
+- `head/horns/curled/adult/walk.png` — Autor: Nila122. Licenças: OGA-BY 3.0,
+  GPL 3.0, CC-BY-SA 3.0. Fonte: https://opengameart.org/content/lpc-lizard-headgear
 - `facial/glasses/glasses/adult/walk/black.png` — Autor: ElizaWy.
 - `torso/jacket/iverness/male/walk/black.png` — Autor: bluecarrot16.
 - `body/wings/feathered/adult/{bg,fg}/walk/ash.png` — original by ElizaWy,
