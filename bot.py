@@ -476,7 +476,7 @@ async def main():
     ui.show_banner()
     
     if not all([CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN, BROADCASTER_ID]):
-        print("❌ Faltam credenciais no .env! Rode o setup.bat primeiro.")
+        print("❌ Faltam credenciais no .env! Apague o .env e rode o run.bat de novo.")
         return
     
     # Tenta renovar o token antes de iniciar para garantir conexão

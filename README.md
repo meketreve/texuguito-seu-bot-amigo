@@ -68,12 +68,9 @@ files/
 ## Executar
 
 ```bash
-# Desenvolvimento
+# Instala dependências, roda o setup se faltar .env, e inicia o bot
+run.bat
+
+# Desenvolvimento (sem o launcher)
 python bot.py
-
-# Instalar dependências
-install.bat
-
-# Setup credenciais
-setup.bat
 ```

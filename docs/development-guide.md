@@ -29,9 +29,8 @@ Para rodar o bot em modo de desenvolvimento:
 ```bash
 python bot.py
 ```
-Ou use os scripts facilitadores:
-- `run.bat`: Inicia o bot.
-- `install.bat`: Reinstala dependências.
+Ou use o script facilitador:
+- `run.bat`: Instala dependências, roda o setup se faltar `.env`, e inicia o bot.
 
 ## Common Tasks
 - **Adicionar Áudios**: Coloque arquivos `.mp3` em `files/audio/<valor>/`.
