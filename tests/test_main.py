@@ -1,11 +1,17 @@
 import asyncio
+import dataclasses
 
 import pytest
 import twitchio.errors
 
 import chat_parade.main as main_module
 from chat_parade.config import Config
-from chat_parade.main import _run_until_error, _run_web_server, build_components
+from chat_parade.main import (
+    _load_and_refresh_config,
+    _run_until_error,
+    _run_web_server,
+    build_components,
+)
 
 
 async def test_run_until_error_prints_friendly_message_on_auth_failure(capsys):
@@ -85,11 +91,14 @@ async def test_run_until_error_propagates_other_exceptions():
 async def test_build_components_wires_everything_without_network(tmp_path):
     config = Config(
         client_id="id",
+        client_secret="secret",
         token="tok",
+        refresh_token="reftok",
         broadcaster_id="1",
         channel="canal",
         data_dir=tmp_path,
         overlay_port=8901,
+        env_path=tmp_path / ".env",
     )
 
     store, events, app, broadcaster, bot = build_components(config)
@@ -99,3 +108,63 @@ async def test_build_components_wires_everything_without_network(tmp_path):
     assert app is not None
     assert broadcaster is not None
     assert bot is not None
+
+
+def test_load_and_refresh_config_uses_refreshed_token_and_updates_env(monkeypatch, tmp_path):
+    original = Config(
+        client_id="id",
+        client_secret="secret",
+        token="old-token",
+        refresh_token="old-refresh",
+        broadcaster_id="1",
+        channel="canal",
+        data_dir=tmp_path,
+        overlay_port=8901,
+        env_path=tmp_path / ".env",
+    )
+    refreshed = dataclasses.replace(original, token="new-token", refresh_token="new-refresh")
+
+    monkeypatch.setattr(main_module, "load_config", lambda env_path=None: original)
+    monkeypatch.setattr(main_module, "refresh_token", lambda config: refreshed)
+
+    update_calls = []
+    monkeypatch.setattr(
+        main_module,
+        "update_env_file",
+        lambda env_path, token, refresh_token: update_calls.append((env_path, token, refresh_token)),
+    )
+
+    result = _load_and_refresh_config()
+
+    assert result == refreshed
+    assert update_calls == [(refreshed.env_path, "new-token", "new-refresh")]
+
+
+def test_load_and_refresh_config_falls_back_when_refresh_fails(monkeypatch, tmp_path, capsys):
+    original = Config(
+        client_id="id",
+        client_secret="secret",
+        token="old-token",
+        refresh_token="old-refresh",
+        broadcaster_id="1",
+        channel="canal",
+        data_dir=tmp_path,
+        overlay_port=8901,
+        env_path=tmp_path / ".env",
+    )
+
+    monkeypatch.setattr(main_module, "load_config", lambda env_path=None: original)
+    monkeypatch.setattr(main_module, "refresh_token", lambda config: None)
+
+    update_calls = []
+    monkeypatch.setattr(
+        main_module,
+        "update_env_file",
+        lambda env_path, token, refresh_token: update_calls.append((env_path, token, refresh_token)),
+    )
+
+    result = _load_and_refresh_config()
+
+    assert result == original
+    assert update_calls == []
+    assert "não foi possível renovar" in capsys.readouterr().out.lower()

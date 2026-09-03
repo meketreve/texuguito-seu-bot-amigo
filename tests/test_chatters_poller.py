@@ -11,11 +11,14 @@ from chat_parade.viewer_store import ViewerStore
 def _config(tmp_path) -> Config:
     return Config(
         client_id="id",
+        client_secret="secret",
         token="tok",
+        refresh_token="reftok",
         broadcaster_id="1",
         channel="canal",
         data_dir=tmp_path,
         overlay_port=8901,
+        env_path=tmp_path / ".env",
     )
 
 

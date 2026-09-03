@@ -7,6 +7,7 @@ import uvicorn
 
 from chat_parade.chatters_poller import run_chatters_poller
 from chat_parade.config import Config, load_config
+from chat_parade.token_manager import refresh_token, update_env_file
 from chat_parade.twitch_chat import ChatParadeBot
 from chat_parade.viewer_store import ViewerEvent, ViewerStore
 from chat_parade.web_server import create_app
@@ -50,8 +51,20 @@ async def _run_until_error(*coroutines) -> None:
         print("[chat-parade] gere um token novo (veja 'Se o token expirar' no README) e tente de novo.")
 
 
-async def main() -> None:
+def _load_and_refresh_config() -> Config:
     config = load_config()
+
+    refreshed = refresh_token(config)
+    if refreshed is None:
+        print("[chat-parade] não foi possível renovar o token, tentando conectar com o token atual...")
+        return config
+
+    update_env_file(refreshed.env_path, refreshed.token, refreshed.refresh_token)
+    return refreshed
+
+
+async def main() -> None:
+    config = _load_and_refresh_config()
     store, events, app, broadcaster, bot = build_components(config)
 
     print(f"[chat-parade] overlay pronto em: http://localhost:{config.overlay_port}/overlay")

@@ -6,20 +6,25 @@ comandos no chat.
 
 ## Setup
 
+Rode `run.bat`: instala as dependências e, se não achar um `.env`, dispara
+`python -m chat_parade.oauth_setup` — abre o navegador pra você autorizar o
+app Twitch, captura o código de retorno num servidor local
+(`http://localhost:3000`), troca por token+refresh token e já salva tudo em
+`.env`. Da próxima vez que rodar, o `.env` já existe e ele pula direto pro
+app.
+
+Sem `run.bat` (Linux/Mac ou manual):
+
 1. `pip install -r requirements.txt`
-2. Copie `.env.example` pra `.env` e preencha com as credenciais do seu app
-   Twitch (pode reaproveitar as mesmas do `texuguito-seu-bot-amigo`, que já
-   tem o escopo `moderator:read:chatters`):
-
-   ```
-   CLIENT_ID=...
-   TOKEN=...
-   BROADCASTER_ID=...
-   CHANNEL=...
-   ```
-
+2. `python -m chat_parade.oauth_setup` (pede `CLIENT_ID`, `CLIENT_SECRET` e o
+   nome do canal, faz o fluxo OAuth e escreve o `.env`)
 3. Rode os testes: `pytest`
 4. Suba o app: `python -m chat_parade.main`
+
+O app Twitch precisa ter `http://localhost:3000` cadastrado nas suas
+Redirect URLs (dev.twitch.tv/console/apps). Pode ser o mesmo app do
+`texuguito-seu-bot-amigo` — só o escopo pedido é diferente (`chat-parade`
+pede só o que usa: `chat:read chat:edit moderator:read:chatters bits:read`).
 
 O processo não abre navegador nenhum — ele imprime no console algo como:
 
@@ -59,9 +64,12 @@ anel dourado ao redor do avatar por alguns segundos.
 
 ## Se o token expirar
 
-O token é o mesmo app do `texuguito-seu-bot-amigo` — rode `python setup.py`
-naquele projeto de novo pra gerar um token novo e copie os valores pro `.env`
-daqui.
+Não precisa fazer nada: toda vez que o app sobe, ele tenta renovar o access
+token sozinho usando o `REFRESH_TOKEN` guardado no `.env` (mesma lógica do
+`texuguito-seu-bot-amigo`) e já regrava `TOKEN`/`REFRESH_TOKEN` atualizados
+no arquivo. Se a renovação falhar (ex: refresh token revogado), ele avisa no
+console e tenta conectar com o token atual mesmo assim — nesse caso, rode
+`python -m chat_parade.oauth_setup` de novo pra reautorizar do zero.
 
 ## Créditos
 
