@@ -222,3 +222,19 @@ def handle_avatarmod(
         return f"@{username} cor inválida.", None
     store.set_color(target, cor)
     return None, ViewerEvent(type="updated", username=target.lower())
+
+
+def handle_comandos(
+    store: ViewerStore, username: str, args: list[str], is_privileged: bool = False
+) -> tuple[str | None, ViewerEvent | None]:
+    comandos = [
+        "!cor <cor>",
+        "!resetcor",
+        "!chapeu <opção>",
+        "!acessorio <opção>",
+        "!nick <apelido>",
+        "!dança",
+    ]
+    if is_privileged:
+        comandos.append("!avatarmod <usuario> <cor>")
+    return f"@{username} comandos: {', '.join(comandos)}", None

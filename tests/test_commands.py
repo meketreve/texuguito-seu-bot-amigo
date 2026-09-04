@@ -2,6 +2,7 @@ from chat_parade.commands import (
     handle_acessorio,
     handle_avatarmod,
     handle_chapeu,
+    handle_comandos,
     handle_cor,
     handle_danca,
     handle_nick,
@@ -202,3 +203,19 @@ def test_handle_avatarmod_changes_target_when_privileged(tmp_path):
     )
     assert event.username == "outrapessoa"
     assert store.get_or_create("outrapessoa").cor == "#ff0000"
+
+
+def test_handle_comandos_lists_base_commands_for_everyone(tmp_path):
+    store = ViewerStore(tmp_path / "v.json")
+    reply, event = handle_comandos(store, "fulano", [], is_privileged=False)
+    assert event is None
+    for comando in ["!cor", "!resetcor", "!chapeu", "!acessorio", "!nick", "!dança"]:
+        assert comando in reply
+    assert "!avatarmod" not in reply
+
+
+def test_handle_comandos_includes_avatarmod_when_privileged(tmp_path):
+    store = ViewerStore(tmp_path / "v.json")
+    reply, event = handle_comandos(store, "mod1", [], is_privileged=True)
+    assert event is None
+    assert "!avatarmod" in reply

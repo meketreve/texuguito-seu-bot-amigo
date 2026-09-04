@@ -103,3 +103,14 @@ class ChatParadeBot(commands.Bot):
             cmds.handle_avatarmod,
             is_privileged=is_privileged,
         )
+
+    @commands.command(name="comandos", aliases=["ajuda", "help"])
+    async def comandos_cmd(self, ctx: commands.Context) -> None:
+        is_privileged = ctx.author.is_mod or ctx.author.is_broadcaster
+        await self._respond(
+            ctx,
+            ctx.author.name,
+            [],
+            cmds.handle_comandos,
+            is_privileged=is_privileged,
+        )

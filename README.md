@@ -47,6 +47,7 @@ já é transparente).
 | `!nick <apelido>` | Todos, no próprio avatar | Nome exibido no rodapé. |
 | `!dança` (ou `!danca`) | Todos, no próprio avatar | Dispara uma animação por alguns segundos. |
 | `!avatarmod <usuario> <cor>` | Mod/Broadcaster | Força a cor do avatar de outro viewer. |
+| `!comandos` (ou `!ajuda`, `!help`) | Todos | Lista os comandos disponíveis no chat. |
 
 Decorações automáticas (sem comando): sub ativo ganha borda dourada, mod
 ganha a etiqueta "MOD", broadcaster ganha uma coroa (♛), e dar cheer solta um
