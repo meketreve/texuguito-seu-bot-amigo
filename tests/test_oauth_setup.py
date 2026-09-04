@@ -8,6 +8,7 @@ from chat_parade.oauth_setup import (
     build_auth_url,
     exchange_code_for_token,
     fetch_broadcaster_id,
+    preserved_settings,
     write_env_file,
 )
 
@@ -79,6 +80,23 @@ def test_fetch_broadcaster_id_returns_id_from_helix_users(monkeypatch):
     broadcaster_id = fetch_broadcaster_id("abc123", "tok")
 
     assert broadcaster_id == "999"
+
+
+def test_preserved_settings_defaults_when_env_missing(tmp_path):
+    data_dir, overlay_port = preserved_settings(tmp_path / "does-not-exist.env")
+
+    assert data_dir == "data"
+    assert overlay_port == 8901
+
+
+def test_preserved_settings_reads_existing_env_values(tmp_path):
+    env_path = tmp_path / ".env"
+    env_path.write_text("DATA_DIR=meus_dados\nOVERLAY_PORT=9999\n", encoding="utf-8")
+
+    data_dir, overlay_port = preserved_settings(env_path)
+
+    assert data_dir == "meus_dados"
+    assert overlay_port == 9999
 
 
 def test_write_env_file_writes_all_fields(tmp_path):

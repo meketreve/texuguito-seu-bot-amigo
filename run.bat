@@ -20,17 +20,19 @@ if errorlevel 1 (
 echo ✅ Dependencias instaladas.
 echo.
 
-if exist ".env" (
-    echo ✅ Arquivo .env ja existe, usando as credenciais atuais.
+python -c "import sys; from pathlib import Path; from chat_parade.config import env_is_complete; sys.exit(0 if env_is_complete(Path('.env')) else 1)"
+if not errorlevel 1 (
+    echo ✅ Arquivo .env ja existe e completo, usando as credenciais atuais.
     goto :run
 )
 
-echo ⚠️  Nenhum .env encontrado. Iniciando configuracao...
+echo ⚠️  .env ausente ou incompleto. Iniciando configuracao...
 echo.
 python -m chat_parade.oauth_setup
-if not exist ".env" (
+python -c "import sys; from pathlib import Path; from chat_parade.config import env_is_complete; sys.exit(0 if env_is_complete(Path('.env')) else 1)"
+if errorlevel 1 (
     echo.
-    echo ❌ Configuracao nao foi concluida, .env nao foi criado.
+    echo ❌ Configuracao nao foi concluida, .env continua incompleto.
     pause
     exit /b 1
 )

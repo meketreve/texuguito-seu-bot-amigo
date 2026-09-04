@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlparse
 
 import requests
+from dotenv import dotenv_values
 
 # Same Twitch app/redirect URL as texuguito-seu-bot-amigo's setup.py — the two
 # bots share credentials, and only one setup flow ever runs at a time, so
@@ -55,6 +56,20 @@ def fetch_broadcaster_id(client_id: str, token: str) -> str:
     headers = {"Client-ID": client_id, "Authorization": f"Bearer {token}"}
     response = requests.get("https://api.twitch.tv/helix/users", headers=headers, timeout=10)
     return response.json()["data"][0]["id"]
+
+
+def preserved_settings(env_path: Path) -> tuple[str, int]:
+    """DATA_DIR/OVERLAY_PORT from an existing .env, or the defaults.
+
+    Lets re-running setup (e.g. because CLIENT_SECRET/REFRESH_TOKEN were
+    missing from an older .env) keep a custom data dir or port instead of
+    silently resetting them.
+    """
+    if not env_path.exists():
+        return "data", 8901
+
+    values = dotenv_values(env_path)
+    return values.get("DATA_DIR") or "data", int(values.get("OVERLAY_PORT") or 8901)
 
 
 def write_env_file(
@@ -188,14 +203,18 @@ def main() -> None:
         return
     print(f"✅ ID do canal: {broadcaster_id}")
 
+    env_path = Path(".env")
+    data_dir, overlay_port = preserved_settings(env_path)
     write_env_file(
-        Path(".env"),
+        env_path,
         client_id=client_id,
         client_secret=client_secret,
         token=token,
         refresh_token=refresh_token,
         broadcaster_id=broadcaster_id,
         channel=channel,
+        data_dir=data_dir,
+        overlay_port=overlay_port,
     )
 
     print()

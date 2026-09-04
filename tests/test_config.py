@@ -1,6 +1,6 @@
 import pytest
 
-from chat_parade.config import MissingConfigError, load_config
+from chat_parade.config import MissingConfigError, env_is_complete, load_config
 
 
 def test_load_config_reads_required_fields(monkeypatch, tmp_path):
@@ -46,3 +46,32 @@ def test_load_config_raises_when_only_client_secret_missing(monkeypatch, tmp_pat
 
     with pytest.raises(MissingConfigError):
         load_config(env_path=tmp_path / "does-not-exist.env")
+
+
+def test_env_is_complete_false_when_file_missing(tmp_path):
+    assert env_is_complete(tmp_path / "does-not-exist.env") is False
+
+
+def test_env_is_complete_false_when_file_predates_new_required_vars(tmp_path):
+    env_path = tmp_path / ".env"
+    env_path.write_text(
+        "CLIENT_ID=abc123\nTOKEN=tok456\nBROADCASTER_ID=789\nCHANNEL=meucanal\n",
+        encoding="utf-8",
+    )
+
+    assert env_is_complete(env_path) is False
+
+
+def test_env_is_complete_true_when_all_required_vars_present(tmp_path):
+    env_path = tmp_path / ".env"
+    env_path.write_text(
+        "CLIENT_ID=abc123\n"
+        "CLIENT_SECRET=sekret\n"
+        "TOKEN=tok456\n"
+        "REFRESH_TOKEN=refresh456\n"
+        "BROADCASTER_ID=789\n"
+        "CHANNEL=meucanal\n",
+        encoding="utf-8",
+    )
+
+    assert env_is_complete(env_path) is True

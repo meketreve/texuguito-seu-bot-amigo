@@ -4,7 +4,16 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from dotenv import load_dotenv
+from dotenv import dotenv_values, load_dotenv
+
+REQUIRED_KEYS = (
+    "CLIENT_ID",
+    "CLIENT_SECRET",
+    "TOKEN",
+    "REFRESH_TOKEN",
+    "BROADCASTER_ID",
+    "CHANNEL",
+)
 
 
 @dataclass(frozen=True)
@@ -24,17 +33,23 @@ class MissingConfigError(RuntimeError):
     pass
 
 
+def env_is_complete(env_path: Path) -> bool:
+    """True when env_path exists and defines every var load_config requires.
+
+    Used by run.bat to decide whether to launch oauth_setup: unlike
+    ``if exist .env``, this also catches an .env left over from before a
+    var like CLIENT_SECRET/REFRESH_TOKEN became required.
+    """
+    if not env_path.exists():
+        return False
+    values = dotenv_values(env_path)
+    return all(values.get(key) for key in REQUIRED_KEYS)
+
+
 def load_config(env_path: Path | None = None) -> Config:
     load_dotenv(dotenv_path=env_path)
 
-    required = {
-        "CLIENT_ID": os.getenv("CLIENT_ID"),
-        "CLIENT_SECRET": os.getenv("CLIENT_SECRET"),
-        "TOKEN": os.getenv("TOKEN"),
-        "REFRESH_TOKEN": os.getenv("REFRESH_TOKEN"),
-        "BROADCASTER_ID": os.getenv("BROADCASTER_ID"),
-        "CHANNEL": os.getenv("CHANNEL"),
-    }
+    required = {key: os.getenv(key) for key in REQUIRED_KEYS}
     missing = [key for key, value in required.items() if not value]
     if missing:
         raise MissingConfigError(
