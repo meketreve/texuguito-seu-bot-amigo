@@ -2,7 +2,29 @@
   "permissions": {
     "allow": [
       "Bash(git rm *)",
-      "Bash(rtk git *)"
+      "Bash(rtk git *)",
+      "Bash(python bot.py)",
+      "Bash(python3 bot.py)",
+      "Bash(rtk ls *)",
+      "Bash(python3 -m pip --version)",
+      "Bash(python3 -c \"import twitchio; print\\(twitchio.__version__\\)\")",
+      "Bash(python3 -m venv .venv)",
+      "Bash(.venv/bin/pip install *)",
+      "Bash(.venv/bin/python3 -m ensurepip)",
+      "Bash(rm -rf .venv)",
+      "Bash(python3 -m pip install -q --user -r requirements.txt)",
+      "Bash(python3 -m pip install -q --break-system-packages -r requirements.txt)",
+      "Bash(python3 -m py_compile bot.py)",
+      "Bash(python3 -m pip install -q --break-system-packages python-dotenv requests rich emoji gTTS \"twitchio==2.10.0\")",
+      "Bash(python3 -c \"import twitchio; print\\('twitchio', twitchio.__version__\\)\")",
+      "Bash(python3 -c \"from twitchio.ext import commands; print\\('ext ok'\\)\")",
+      "Bash(PYTHONPATH=/tmp/pgstub timeout 12 python3 bot.py)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(rtk read *)",
+      "Bash(python3 -m pip install --break-system-packages \"pygame-ce\")",
+      "Bash(python3 -c \"import pygame; print\\('pygame', pygame.version.ver\\)\")",
+      "Bash(SDL_AUDIODRIVER=dummy timeout 8 python3 bot.py)",
+      "Bash(rtk grep *)"
     ]
   }
 }
