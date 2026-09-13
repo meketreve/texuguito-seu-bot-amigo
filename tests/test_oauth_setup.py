@@ -83,7 +83,7 @@ def test_fetch_account_returns_id_and_login_from_helix_users(monkeypatch):
 
 def test_open_callback_server_returns_none_when_port_is_taken(monkeypatch):
     """Regression test: another program on the redirect port (e.g. a dev
-    server on 3000) used to crash setup with a raw OSError traceback, after
+    server on the old redirect port, 3000) used to crash setup with a raw OSError traceback, after
     the browser had already been sent to Twitch."""
     import socket
 

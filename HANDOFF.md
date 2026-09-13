@@ -35,7 +35,7 @@ com `origin`). Repo ainda **privado**._
     overlay ocupada (já aberto). Renova e salva o token quando dá certo.
   - `oauth_setup.py`: canal e `BROADCASTER_ID` vêm do login de quem autoriza (não
     pergunta mais o canal); Enter mantém ID/segredo atuais; abre o painel da Twitch com
-    passo a passo; checa a porta 3000 **antes** de abrir o navegador (sem
+    passo a passo; checa a porta de retorno **antes** de abrir o navegador (sem
     `SO_REUSEADDR` no Windows, que deixaria dividir a porta com outro programa);
     preserva `DATA_DIR`/`OVERLAY_PORT`/`AUDIO_DIR`/`AUDIO_VOLUME` ao reescrever o `.env`.
 - Testes: `.venv` criado nesta máquina; `.venv/bin/python -m pytest` → 157 passando.
@@ -46,14 +46,16 @@ com `origin`). Repo ainda **privado**._
 0. **Gerar o `.env` com o app novo da Twitch.** Em 2026-09-13 o usuário revogou o
    token e **apagou o app antigo** (resolvendo o token vazado no histórico do
    texuguito) e criou um app novo. O `.env` desta máquina ainda tem o app apagado
-   (`check_setup` confirma: "Twitch recusou"). O usuário tentou o setup e falhou porque
-   o **SpacetimeDB (projeto `nos`) ocupa a porta 3000** nesta máquina: parar o
-   SpacetimeDB antes de rodar `.venv/bin/python -m chat_parade.oauth_setup`. O
+   (`check_setup` confirma: "Twitch recusou"). O primeiro setup falhou porque o
+   SpacetimeDB (iniciado pela sessão do projeto `nos`) ocupava a porta 3000; ele foi
+   encerrado a pedido do usuário e a porta de retorno do OAuth virou **17563** (sem
+   commit ainda). O app novo precisa de `http://localhost:17563` nas Redirect URLs.
+   Falta o usuário rodar `.venv/bin/python -m chat_parade.oauth_setup`. O
    segredo do app novo apareceu no terminal compartilhado com o Claude: sugerido gerar
    um "Novo segredo" nessa configuração. Quem digita as credenciais é o usuário.
 1. **Rodar o `run.bat` numa máquina Windows.** Ele **nunca foi executado**: não há
    Windows/Wine nesta máquina; só a lógica Python foi testada (incluindo `check_setup`
-   contra a Twitch real e o aviso de porta 3000 ocupada). Conferir: Python ausente
+   contra a Twitch real e o aviso de porta de retorno ocupada). Conferir: Python ausente
    (winget), primeira instalação no `.venv`, setup abrindo sozinho, `run.bat setup`,
    segunda janela avisando que já está aberto.
 2. **Tornar o chat-parade público** — o usuário pediu pra **esperar**; só fazer quando
@@ -91,6 +93,8 @@ com `origin`). Repo ainda **privado**._
 
 ## Notas
 
+- Porta de retorno do OAuth: **17563** (era 3000, que conflita com servidores de dev).
+  Apps antigos só com a 3000 dão `redirect_mismatch` na Twitch; basta adicionar a nova.
 - Overlay aberto em mais de um lugar = áudio tocando duas vezes (cada página toca).
 - Em navegador comum, autoplay só funciona depois de um clique na página; no OBS toca
   direto.

@@ -11,8 +11,10 @@ import requests
 from dotenv import dotenv_values
 
 # Must match an "OAuth Redirect URL" registered on the Twitch app, so it can't
-# move without every existing app needing a new URL registered.
-REDIRECT_PORT = 3000
+# move without every existing app needing a new URL registered. Deliberately
+# not 3000: that's the default of countless dev servers (SpacetimeDB, React,
+# Rails...), and setup can't receive Twitch's redirect while one of them runs.
+REDIRECT_PORT = 17563
 REDIRECT_URI = f"http://localhost:{REDIRECT_PORT}"
 TOKEN_URL = "https://id.twitch.tv/oauth2/token"
 AUTHORIZE_URL = "https://id.twitch.tv/oauth2/authorize"
@@ -193,6 +195,8 @@ def _print_instructions(has_current: bool) -> None:
     if has_current:
         print("Já existe um app configurado. Se ele continua valendo, só aperte")
         print("Enter nas duas perguntas e autorize de novo no navegador.")
+        print(f"Se a Twitch mostrar o erro \"redirect_mismatch\", adicione {REDIRECT_URI}")
+        print("nas URLs de redirecionamento OAuth do app (em Gerenciar) e tente de novo.")
         print()
     if has_current:
         print(f"Se precisar de um app novo, o painel fica em {DEV_CONSOLE_URL}:")
@@ -228,8 +232,8 @@ def main() -> int:
         print()
         print(f"❌ A porta {REDIRECT_PORT} está ocupada por outro programa.")
         print(f"   A Twitch devolve a autorização em {REDIRECT_URI}, então ela precisa")
-        print("   estar livre. Feche o programa que está usando essa porta (servidores")
-        print("   de desenvolvimento costumam usar a 3000) e rode a configuração de novo.")
+        print("   estar livre. Feche o programa que está usando essa porta e rode a")
+        print("   configuração de novo.")
         return 1
 
     state = secrets.token_urlsafe(16)

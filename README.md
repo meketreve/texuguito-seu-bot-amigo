@@ -31,9 +31,10 @@ No Windows, é só dar dois cliques no **`run.bat`**. Ele cuida de tudo:
 Pra trocar de app ou de conta, rode `run.bat setup`. Na configuração, Enter
 mantém o ID e o segredo atuais.
 
-O app da Twitch precisa ter `http://localhost:3000` nas URLs de
+O app da Twitch precisa ter `http://localhost:17563` nas URLs de
 redirecionamento OAuth, e essa porta precisa estar livre durante a
-configuração (servidores de desenvolvimento costumam usar a 3000). As
+configuração. Apps configurados antes com `http://localhost:3000` só precisam
+adicionar a URL nova no painel da Twitch. As
 permissões pedidas são só as que o app usa:
 `chat:read chat:edit moderator:read:chatters bits:read`.
 
