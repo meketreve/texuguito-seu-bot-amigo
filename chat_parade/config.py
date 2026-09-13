@@ -27,6 +27,8 @@ class Config:
     data_dir: Path
     overlay_port: int
     env_path: Path
+    audio_dir: Path = Path("audios")
+    audio_volume: float = 1.0
 
 
 class MissingConfigError(RuntimeError):
@@ -66,4 +68,6 @@ def load_config(env_path: Path | None = None) -> Config:
         data_dir=Path(os.getenv("DATA_DIR", "data")),
         overlay_port=int(os.getenv("OVERLAY_PORT", "8901")),
         env_path=env_path if env_path is not None else Path(".env"),
+        audio_dir=Path(os.getenv("AUDIO_DIR", "audios")),
+        audio_volume=float(os.getenv("AUDIO_VOLUME", "1.0")),
     )

@@ -10,6 +10,8 @@ def test_load_config_reads_required_fields(monkeypatch, tmp_path):
     monkeypatch.setenv("REFRESH_TOKEN", "refresh456")
     monkeypatch.setenv("BROADCASTER_ID", "789")
     monkeypatch.setenv("CHANNEL", "meucanal")
+    monkeypatch.delenv("AUDIO_DIR", raising=False)
+    monkeypatch.delenv("AUDIO_VOLUME", raising=False)
 
     env_path = tmp_path / "does-not-exist.env"
     config = load_config(env_path=env_path)
@@ -22,6 +24,20 @@ def test_load_config_reads_required_fields(monkeypatch, tmp_path):
     assert config.channel == "meucanal"
     assert config.overlay_port == 8901
     assert config.env_path == env_path
+    assert str(config.audio_dir) == "audios"
+    assert config.audio_volume == 1.0
+
+
+def test_load_config_reads_optional_audio_settings(monkeypatch, tmp_path):
+    for key in ("CLIENT_ID", "CLIENT_SECRET", "TOKEN", "REFRESH_TOKEN", "BROADCASTER_ID", "CHANNEL"):
+        monkeypatch.setenv(key, "x")
+    monkeypatch.setenv("AUDIO_DIR", "meus-sons")
+    monkeypatch.setenv("AUDIO_VOLUME", "0.5")
+
+    config = load_config(env_path=tmp_path / "does-not-exist.env")
+
+    assert str(config.audio_dir) == "meus-sons"
+    assert config.audio_volume == 0.5
 
 
 def test_load_config_raises_when_missing_fields(monkeypatch, tmp_path):

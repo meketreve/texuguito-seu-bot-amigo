@@ -4,6 +4,12 @@ Overlay pixel art pra live na Twitch: todo mundo assistindo aparece andando
 no rodapé da stream, com avatar gerado automaticamente e personalizável via
 comandos no chat.
 
+Também é o bot de pontos do canal (antigo
+[texuguito-seu-bot-amigo](https://github.com/meketreve/texuguito-seu-bot-amigo)):
+quem assiste ganha pontos por tempo no chat e gasta tocando áudios (`!p`),
+mandando mensagens em voz (`!tts`) ou participando de sorteios. Os áudios
+tocam pelo próprio overlay, então o OBS captura junto com o Browser Source.
+
 ## Setup
 
 Rode `run.bat`: instala as dependências e, se não achar um `.env`, dispara
@@ -22,9 +28,8 @@ Sem `run.bat` (Linux/Mac ou manual):
 4. Suba o app: `python -m chat_parade.main`
 
 O app Twitch precisa ter `http://localhost:3000` cadastrado nas suas
-Redirect URLs (dev.twitch.tv/console/apps). Pode ser o mesmo app do
-`texuguito-seu-bot-amigo` — só o escopo pedido é diferente (`chat-parade`
-pede só o que usa: `chat:read chat:edit moderator:read:chatters bits:read`).
+Redirect URLs (dev.twitch.tv/console/apps). O escopo pedido é só o que o app
+usa: `chat:read chat:edit moderator:read:chatters bits:read`.
 
 O processo não abre navegador nenhum — ele imprime no console algo como:
 
@@ -34,7 +39,12 @@ O processo não abre navegador nenhum — ele imprime no console algo como:
 ```
 
 Cole essa URL num Browser Source do OBS (largura/altura à sua escolha, fundo
-já é transparente).
+já é transparente). Marque **"Controlar áudio via OBS"** nas propriedades do
+Browser Source pra os áudios do `!p`/`!tts` aparecerem no mixer do OBS com
+volume próprio. Deixe o overlay aberto em **um** lugar só: cada página aberta
+toca os áudios, então com o OBS e uma aba do navegador abertos ao mesmo tempo
+o som sai duas vezes. Com o overlay fechado, o `!p` e o `!tts` recusam o
+pedido sem cobrar pontos.
 
 ## Comandos do chat
 
@@ -47,6 +57,16 @@ já é transparente).
 | `!nick <apelido>` | Todos, no próprio avatar | Nome exibido no rodapé. |
 | `!dança` (ou `!danca`) | Todos, no próprio avatar | Dispara uma animação por alguns segundos. |
 | `!avatarmod <usuario> <cor>` | Mod/Broadcaster | Força a cor do avatar de outro viewer. |
+| `!pontos` (ou `!pts`) | Todos | Mostra seu saldo de pontos. |
+| `!p <nome>` (ou `!play`) | Todos | Toca um áudio, pagando o preço dele em pontos. Cooldown de 1 minuto entre áudios. |
+| `!audios` (ou `!sons`, `!sounds`) | Todos | Lista os áudios disponíveis, agrupados por preço. |
+| `!tts <mensagem>` | Todos | Lê a mensagem em voz alta (custa 200 pontos). |
+| `!stop` | Todos | Para o áudio que está tocando. |
+| `!join` | Todos | Entra no sorteio em andamento. |
+| `!status` / `!ping` | Todos | Confere se o bot está online. |
+| `!addpoints <usuario> <qtd>` (ou `!dar`, `!give`) | Mod/Broadcaster | Dá pontos pra alguém. |
+| `!reload` | Mod/Broadcaster | Relê a pasta de áudios (pra adicionar áudio sem reiniciar). |
+| `!sorteio <pontos> <minutos>` | Broadcaster | Abre um sorteio; no fim, um dos que deram `!join` leva os pontos. |
 | `!comandos` (ou `!ajuda`, `!help`) | Todos | Lista os comandos disponíveis no chat. |
 
 Decorações automáticas (sem comando): sub ativo ganha borda dourada, mod
@@ -63,11 +83,39 @@ anel dourado ao redor do avatar por alguns segundos.
 `tapaolho`, `oculosescuros`, `monoculo`, `asasmorcego`, `asasborboleta`,
 `asaslibelula`, `nenhum`.
 
+## Pontos e áudios
+
+- Quem está no chat ganha **1 ponto por minuto** (precisa aparecer em duas
+  checagens seguidas, com 1 minuto entre elas). Os saldos ficam em
+  `data/points.json`.
+- Os áudios do `!p` ficam em `audios/`, numa subpasta com o **preço em pontos**
+  como nome. O nome do arquivo (sem extensão) é o que o viewer digita:
+
+  ```
+  audios/
+    20/oof.mp3      → !p oof custa 20 pontos
+    100/bonk.ogg    → !p bonk custa 100 pontos
+  ```
+
+  Aceita `.mp3`, `.wav` e `.ogg`. A pasta é criada sozinha na primeira vez que
+  o app sobe e não vai pro git (cada streamer usa os seus áudios). Depois de
+  adicionar arquivos, use `!reload` no chat.
+- O `!tts` usa o Google TTS (pt-BR), então precisa de internet. Se der erro,
+  os pontos são devolvidos.
+- Opcional no `.env`: `AUDIO_DIR` (outra pasta de áudios) e `AUDIO_VOLUME`
+  (0.0 a 1.0, padrão 1.0).
+
+### Vindo do texuguito
+
+O `points.json` do texuguito tem o mesmo formato: copie pra
+`data/points.json` e os saldos continuam. Copie as subpastas de `files/` pra
+`audios/`. O `.env` do texuguito também serve como está: as variáveis são as
+mesmas e os escopos que ele pede já incluem os do chat-parade.
+
 ## Se o token expirar
 
 Não precisa fazer nada: toda vez que o app sobe, ele tenta renovar o access
-token sozinho usando o `REFRESH_TOKEN` guardado no `.env` (mesma lógica do
-`texuguito-seu-bot-amigo`) e já regrava `TOKEN`/`REFRESH_TOKEN` atualizados
+token sozinho usando o `REFRESH_TOKEN` guardado no `.env` e já regrava `TOKEN`/`REFRESH_TOKEN` atualizados
 no arquivo. Se a renovação falhar (ex: refresh token revogado), ele avisa no
 console e tenta conectar com o token atual mesmo assim — nesse caso, rode
 `python -m chat_parade.oauth_setup` de novo pra reautorizar do zero.
@@ -146,10 +194,15 @@ Os avatares usam sprites do [Liberated Pixel Cup](https://lpc.opengameart.org)
 - `body/wings/monarch/base/{bg,fg}/walk/monarch.png` — "In dedication to my
   grandmother, Sharon Rowe". Autor: The Foreman.
 
+## Licença
+
+Código sob [GPL-3.0](LICENSE). Os sprites em `web/assets/lpc/` são do Liberated
+Pixel Cup, sob CC-BY-SA 3.0 / GPL 3.0 (autores listados em Créditos acima).
+
 ## Testes
 
-`pytest` roda toda a suíte (parsing de comando, estado persistido, servidor
-web). A renderização do sprite (fatiamento de frame, composição de camadas,
+`pytest` roda toda a suíte (parsing de comando, estado persistido, pontos,
+áudios, sorteio, servidor web). A renderização do sprite (fatiamento de frame, composição de camadas,
 recolor) não tem suíte automatizada — ver `docs/superpowers/plans/2026-08-30-lpc-pixelart-avatars.md`
 pra como verificar isso manualmente. O comportamento de IRC ao vivo e a animação no
 navegador só dá pra verificar manualmente: suba o app, abra a URL impressa

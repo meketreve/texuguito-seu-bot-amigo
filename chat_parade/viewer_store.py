@@ -126,6 +126,9 @@ class ViewerStore:
     def usernames(self) -> list[str]:
         return list(self._viewers.keys())
 
+    def present_usernames(self) -> set[str]:
+        return {name for name, status in self._status.items() if status.present}
+
     def set_color(self, username: str, cor: str) -> None:
         viewer = self.get_or_create(username)
         viewer.cor = cor
@@ -174,9 +177,7 @@ class ViewerStore:
 
     def sync_present_chatters(self, usernames: set[str]) -> tuple[set[str], set[str]]:
         usernames = {u.lower() for u in usernames}
-        currently_present = {
-            name for name, status in self._status.items() if status.present
-        }
+        currently_present = self.present_usernames()
 
         joined = usernames - currently_present
         left = currently_present - usernames

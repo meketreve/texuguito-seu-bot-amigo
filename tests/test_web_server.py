@@ -4,6 +4,7 @@ import time
 
 from fastapi.testclient import TestClient
 
+from chat_parade.soundboard import TtsCache
 from chat_parade.viewer_store import ViewerEvent, ViewerStore
 from chat_parade.web_server import OverlayBroadcaster, create_app, viewer_payload
 
@@ -194,7 +195,7 @@ async def test_run_always_broadcasts_left_events(tmp_path):
 
 
 async def test_broadcast_survives_connection_registered_mid_broadcast(tmp_path):
-    """Regression test: a new websocket connecting while _broadcast is mid-await
+    """Regression test: a new websocket connecting while broadcast is mid-await
     on another (slow) connection must not raise 'Set changed size during
     iteration' and must not stop the broadcast to the other connections."""
     store = ViewerStore(tmp_path / "v.json")
@@ -205,11 +206,11 @@ async def test_broadcast_survives_connection_registered_mid_broadcast(tmp_path):
     slow = _FakeConnection(release_event=release)
     broadcaster._connections.add(slow)
 
-    broadcast_task = asyncio.create_task(broadcaster._broadcast({"type": "test"}))
-    await asyncio.sleep(0)  # let _broadcast start iterating and suspend on slow.send_json
+    broadcast_task = asyncio.create_task(broadcaster.broadcast({"type": "test"}))
+    await asyncio.sleep(0)  # let broadcast start iterating and suspend on slow.send_json
 
     # Simulate a new client connecting concurrently (register() mutates the
-    # same set) while _broadcast's for-loop still has a live iterator.
+    # same set) while broadcast's for-loop still has a live iterator.
     newcomer = _FakeConnection()
     broadcaster._connections.add(newcomer)
 
@@ -217,3 +218,61 @@ async def test_broadcast_survives_connection_registered_mid_broadcast(tmp_path):
     await broadcast_task  # must not raise RuntimeError
 
     assert slow.received == [{"type": "test"}]
+
+
+def test_audio_clips_are_served_from_the_audio_dir(tmp_path):
+    audio_dir = tmp_path / "audios"
+    (audio_dir / "20").mkdir(parents=True)
+    (audio_dir / "20" / "loça.mp3").write_bytes(b"ID3fake")
+    app, _ = create_app(ViewerStore(tmp_path / "v.json"), asyncio.Queue(), audio_dir=audio_dir)
+
+    response = TestClient(app).get("/audios/20/lo%C3%A7a.mp3")
+
+    assert response.status_code == 200
+    assert response.content == b"ID3fake"
+
+
+def test_audio_route_does_not_escape_the_audio_dir(tmp_path):
+    (tmp_path / ".env").write_text("TOKEN=segredo", encoding="utf-8")
+    audio_dir = tmp_path / "audios"
+    audio_dir.mkdir()
+    app, _ = create_app(ViewerStore(tmp_path / "v.json"), asyncio.Queue(), audio_dir=audio_dir)
+
+    response = TestClient(app).get("/audios/..%2F.env")
+
+    assert response.status_code == 404
+    assert b"segredo" not in response.content
+
+
+def test_missing_audio_dir_is_created_instead_of_erroring(tmp_path):
+    """StaticFiles raises (-> HTTP 500) on every request if its folder is
+    missing, so the audio folder is created up front; it also shows the
+    streamer where to drop their clips."""
+    audio_dir = tmp_path / "nao-existe"
+    app, _ = create_app(ViewerStore(tmp_path / "v.json"), asyncio.Queue(), audio_dir=audio_dir)
+
+    assert audio_dir.is_dir()
+    assert TestClient(app).get("/audios/20/oof.mp3").status_code == 404
+
+
+def test_tts_clips_are_served_from_the_cache(tmp_path):
+    cache = TtsCache()
+    clip_id = cache.add(b"mp3 bytes")
+    app, _ = create_app(ViewerStore(tmp_path / "v.json"), asyncio.Queue(), tts_cache=cache)
+    client = TestClient(app)
+
+    response = client.get(f"/tts/{clip_id}")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "audio/mpeg"
+    assert response.content == b"mp3 bytes"
+    assert client.get("/tts/naoexiste").status_code == 404
+
+
+def test_has_connections_tracks_open_overlays(tmp_path):
+    store = ViewerStore(tmp_path / "v.json")
+    app, broadcaster = create_app(store, asyncio.Queue())
+
+    assert broadcaster.has_connections is False
+    with TestClient(app).websocket_connect("/ws") as websocket:
+        websocket.receive_json()
+        assert broadcaster.has_connections is True

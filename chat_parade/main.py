@@ -7,6 +7,8 @@ import uvicorn
 
 from chat_parade.chatters_poller import run_chatters_poller
 from chat_parade.config import Config, load_config
+from chat_parade.points import PointsStore, run_points_loop
+from chat_parade.soundboard import Soundboard, TtsCache
 from chat_parade.token_manager import refresh_token, update_env_file
 from chat_parade.twitch_chat import ChatParadeBot
 from chat_parade.viewer_store import ViewerEvent, ViewerStore
@@ -15,10 +17,13 @@ from chat_parade.web_server import create_app
 
 def build_components(config: Config):
     store = ViewerStore(config.data_dir / "viewers.json")
+    points = PointsStore(config.data_dir / "points.json")
     events: "asyncio.Queue[ViewerEvent]" = asyncio.Queue()
-    app, broadcaster = create_app(store, events)
-    bot = ChatParadeBot(config, store, events)
-    return store, events, app, broadcaster, bot
+    tts_cache = TtsCache()
+    app, broadcaster = create_app(store, events, audio_dir=config.audio_dir, tts_cache=tts_cache)
+    soundboard = Soundboard(config.audio_dir, tts_cache, broadcaster, volume=config.audio_volume)
+    bot = ChatParadeBot(config, store, events, points, soundboard)
+    return store, points, events, app, broadcaster, bot
 
 
 async def _run_web_server(app, port: int) -> None:
@@ -65,7 +70,7 @@ def _load_and_refresh_config() -> Config:
 
 async def main() -> None:
     config = _load_and_refresh_config()
-    store, events, app, broadcaster, bot = build_components(config)
+    store, points, events, app, broadcaster, bot = build_components(config)
 
     print(f"[chat-parade] overlay pronto em: http://localhost:{config.overlay_port}/overlay")
     print("[chat-parade] cole essa URL como Browser Source no OBS.")
@@ -73,6 +78,7 @@ async def main() -> None:
     await _run_until_error(
         bot.start(),
         run_chatters_poller(config, store, events),
+        run_points_loop(store, points),
         broadcaster.run(),
         _run_web_server(app, config.overlay_port),
     )

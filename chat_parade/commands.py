@@ -225,7 +225,11 @@ def handle_avatarmod(
 
 
 def handle_comandos(
-    store: ViewerStore, username: str, args: list[str], is_privileged: bool = False
+    store: ViewerStore,
+    username: str,
+    args: list[str],
+    is_privileged: bool = False,
+    is_broadcaster: bool = False,
 ) -> tuple[str | None, ViewerEvent | None]:
     comandos = [
         "!cor <cor>",
@@ -234,7 +238,17 @@ def handle_comandos(
         "!acessorio <opção>",
         "!nick <apelido>",
         "!dança",
+        "!pontos",
+        "!p <nome>",
+        "!audios",
+        "!tts <msg>",
+        "!stop",
+        "!join",
+        "!status",
+        "!ping",
     ]
     if is_privileged:
-        comandos.append("!avatarmod <usuario> <cor>")
+        comandos += ["!avatarmod <usuario> <cor>", "!addpoints <usuario> <qtd>", "!reload"]
+    if is_broadcaster:
+        comandos.append("!sorteio <pts> <min>")
     return f"@{username} comandos: {', '.join(comandos)}", None

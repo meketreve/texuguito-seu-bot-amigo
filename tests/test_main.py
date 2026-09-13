@@ -99,11 +99,13 @@ async def test_build_components_wires_everything_without_network(tmp_path):
         data_dir=tmp_path,
         overlay_port=8901,
         env_path=tmp_path / ".env",
+        audio_dir=tmp_path / "audios",
     )
 
-    store, events, app, broadcaster, bot = build_components(config)
+    store, points, events, app, broadcaster, bot = build_components(config)
 
     assert store is not None
+    assert points is not None
     assert events.empty()
     assert app is not None
     assert broadcaster is not None

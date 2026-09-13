@@ -5,10 +5,11 @@ import time
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
+from chat_parade.soundboard import AUDIO_URL_PREFIX, TTS_URL_PREFIX, TtsCache
 from chat_parade.viewer_store import ViewerEvent, ViewerStore
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
@@ -57,6 +58,10 @@ class OverlayBroadcaster:
     def unregister(self, websocket: WebSocket) -> None:
         self._connections.discard(websocket)
 
+    @property
+    def has_connections(self) -> bool:
+        return bool(self._connections)
+
     async def run(self) -> None:
         while True:
             event = await self._events.get()
@@ -71,9 +76,9 @@ class OverlayBroadcaster:
                 "username": event.username,
                 "viewer": None if event.type == "left" else viewer_payload(self._store, event.username),
             }
-            await self._broadcast(message)
+            await self.broadcast(message)
 
-    async def _broadcast(self, message: dict[str, Any]) -> None:
+    async def broadcast(self, message: dict[str, Any]) -> None:
         stale = set()
         for connection in list(self._connections):
             try:
@@ -84,7 +89,10 @@ class OverlayBroadcaster:
 
 
 def create_app(
-    store: ViewerStore, events: "asyncio.Queue[ViewerEvent]"
+    store: ViewerStore,
+    events: "asyncio.Queue[ViewerEvent]",
+    audio_dir: Path | None = None,
+    tts_cache: TtsCache | None = None,
 ) -> tuple[FastAPI, OverlayBroadcaster]:
     app = FastAPI()
     broadcaster = OverlayBroadcaster(store, events)
@@ -103,6 +111,22 @@ def create_app(
         return FileResponse(WEB_DIR / "overlay.html")
 
     app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
+
+    # Soundboard clips and TTS are played by the overlay page itself (so OBS
+    # captures them), which fetches them from here.
+    if audio_dir is not None:
+        # StaticFiles fails every request (HTTP 500) if its folder is missing,
+        # so create it up front; it also shows the streamer where clips go.
+        audio_dir.mkdir(parents=True, exist_ok=True)
+        app.mount(AUDIO_URL_PREFIX, StaticFiles(directory=audio_dir), name="audios")
+
+    if tts_cache is not None:
+        @app.get(TTS_URL_PREFIX + "/{clip_id}")
+        async def tts_clip(clip_id: str) -> Response:
+            mp3 = tts_cache.get(clip_id)
+            if mp3 is None:
+                raise HTTPException(status_code=404)
+            return Response(content=mp3, media_type="audio/mpeg")
 
     @app.websocket("/ws")
     async def websocket_endpoint(websocket: WebSocket) -> None:

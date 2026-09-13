@@ -233,6 +233,53 @@ function applySnapshot(snapshot) {
   }
 }
 
+// --- Soundboard ---
+// !p and !tts clips play here, in the Browser Source, so OBS captures them
+// with the overlay. Clips queue up and play one at a time; !stop skips the
+// one currently playing.
+
+const audioQueue = [];
+let currentAudio = null;
+
+function playNextAudio() {
+  const next = audioQueue.shift();
+  if (!next) {
+    currentAudio = null;
+    return;
+  }
+  const audio = new Audio(next.url);
+  audio.volume = Math.min(1, Math.max(0, next.volume ?? 1));
+  // A failed load fires "error" AND rejects play(), and pausing a clip that is
+  // still starting rejects play() too. Only advance while this clip is still
+  // the current one, so no path can skip the next clip in the queue.
+  const finish = () => {
+    if (currentAudio === audio) playNextAudio();
+  };
+  audio.onended = finish;
+  audio.onerror = () => {
+    console.error(`[chat-parade] falha ao tocar áudio: ${next.url}`);
+    finish();
+  };
+  currentAudio = audio;
+  audio.play().catch((err) => {
+    console.error("[chat-parade] não foi possível tocar o áudio:", err);
+    finish();
+  });
+}
+
+function enqueueAudio(url, volume) {
+  audioQueue.push({ url, volume });
+  if (!currentAudio) playNextAudio();
+}
+
+function stopCurrentAudio() {
+  if (!currentAudio) return;
+  // pause() doesn't fire "ended", so advance by hand; that also makes the
+  // paused clip stale, which turns its handlers into no-ops.
+  currentAudio.pause();
+  playNextAudio();
+}
+
 function connect() {
   const protocol = location.protocol === "https:" ? "wss:" : "ws:";
   const ws = new WebSocket(`${protocol}//${location.host}/ws`);
@@ -241,6 +288,10 @@ function connect() {
     const message = JSON.parse(event.data);
     if (message.type === "snapshot") {
       applySnapshot(message);
+    } else if (message.type === "audio") {
+      enqueueAudio(message.url, message.volume);
+    } else if (message.type === "audio_stop") {
+      stopCurrentAudio();
     } else if (message.type === "left") {
       removeViewer(message.username);
     } else {

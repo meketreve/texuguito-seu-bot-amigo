@@ -211,7 +211,10 @@ def test_handle_comandos_lists_base_commands_for_everyone(tmp_path):
     assert event is None
     for comando in ["!cor", "!resetcor", "!chapeu", "!acessorio", "!nick", "!dança"]:
         assert comando in reply
-    assert "!avatarmod" not in reply
+    for comando in ["!pontos", "!p <nome>", "!audios", "!tts", "!stop", "!join"]:
+        assert comando in reply
+    for restrito in ["!avatarmod", "!addpoints", "!reload", "!sorteio"]:
+        assert restrito not in reply
 
 
 def test_handle_comandos_includes_avatarmod_when_privileged(tmp_path):
@@ -219,3 +222,14 @@ def test_handle_comandos_includes_avatarmod_when_privileged(tmp_path):
     reply, event = handle_comandos(store, "mod1", [], is_privileged=True)
     assert event is None
     assert "!avatarmod" in reply
+    assert "!addpoints" in reply
+    assert "!reload" in reply
+    assert "!sorteio" not in reply
+
+
+def test_handle_comandos_includes_sorteio_only_for_broadcaster(tmp_path):
+    store = ViewerStore(tmp_path / "v.json")
+    reply, _ = handle_comandos(store, "dono", [], is_privileged=True, is_broadcaster=True)
+    assert "!sorteio" in reply
+    # Every command list must fit in one Twitch chat message.
+    assert len(reply) <= 500

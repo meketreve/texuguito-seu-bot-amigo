@@ -4,4 +4,6 @@ __pycache__/
 venv/
 .env
 data/viewers.json*
+data/points.json*
+audios/
 .superpowers/

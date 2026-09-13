@@ -5,7 +5,11 @@ import asyncio
 from twitchio.ext import commands
 
 from chat_parade import commands as cmds
+from chat_parade import economy_commands as eco
 from chat_parade.config import Config
+from chat_parade.points import PointsStore
+from chat_parade.raffle import Raffle
+from chat_parade.soundboard import Soundboard
 from chat_parade.viewer_store import ViewerEvent, ViewerStore
 
 
@@ -21,8 +25,19 @@ def _args(ctx: commands.Context) -> list[str]:
     return list(ctx.view.words.values())
 
 
+def _is_privileged(ctx: commands.Context) -> bool:
+    return ctx.author.is_mod or ctx.author.is_broadcaster
+
+
 class ChatParadeBot(commands.Bot):
-    def __init__(self, config: Config, store: ViewerStore, events: "asyncio.Queue[ViewerEvent]"):
+    def __init__(
+        self,
+        config: Config,
+        store: ViewerStore,
+        events: "asyncio.Queue[ViewerEvent]",
+        points: PointsStore,
+        soundboard: Soundboard,
+    ):
         super().__init__(
             token=f"oauth:{config.token}",
             prefix="!",
@@ -36,6 +51,11 @@ class ChatParadeBot(commands.Bot):
         # dispatch entirely, since Bot.invoke fires run_event("command_invoke")
         # before running any command body.
         self._viewer_events = events
+        self._points = points
+        self._soundboard = soundboard
+        self._raffle = Raffle()
+        # Keeps a reference so the pending raffle-end task isn't garbage collected.
+        self._raffle_task: asyncio.Task | None = None
 
     async def event_ready(self) -> None:
         print(f"[chat-parade] conectado ao chat de {self.nick}")
@@ -62,10 +82,13 @@ class ChatParadeBot(commands.Bot):
 
         await self.handle_commands(message)
 
+    async def _reply(self, ctx, text: str | None) -> None:
+        if text:
+            await ctx.send(text)
+
     async def _respond(self, ctx, username: str, args: list[str], handler, **kwargs) -> None:
         reply, event = handler(self._store, username, args, **kwargs)
-        if reply:
-            await ctx.send(reply)
+        await self._reply(ctx, reply)
         if event:
             await self._viewer_events.put(event)
 
@@ -95,22 +118,78 @@ class ChatParadeBot(commands.Bot):
 
     @commands.command(name="avatarmod")
     async def avatarmod_cmd(self, ctx: commands.Context) -> None:
-        is_privileged = ctx.author.is_mod or ctx.author.is_broadcaster
         await self._respond(
             ctx,
             ctx.author.name,
             _args(ctx),
             cmds.handle_avatarmod,
-            is_privileged=is_privileged,
+            is_privileged=_is_privileged(ctx),
         )
 
     @commands.command(name="comandos", aliases=["ajuda", "help"])
     async def comandos_cmd(self, ctx: commands.Context) -> None:
-        is_privileged = ctx.author.is_mod or ctx.author.is_broadcaster
         await self._respond(
             ctx,
             ctx.author.name,
             [],
             cmds.handle_comandos,
-            is_privileged=is_privileged,
+            is_privileged=_is_privileged(ctx),
+            is_broadcaster=ctx.author.is_broadcaster,
         )
+
+    # --- Points, soundboard and raffle ---
+
+    @commands.command(name="ping")
+    async def ping_cmd(self, ctx: commands.Context) -> None:
+        await self._reply(ctx, eco.handle_ping(ctx.author.name))
+
+    @commands.command(name="pontos", aliases=["pts"])
+    async def pontos_cmd(self, ctx: commands.Context) -> None:
+        await self._reply(ctx, eco.handle_pontos(self._points, ctx.author.name))
+
+    @commands.command(name="addpoints", aliases=["dar", "give"])
+    async def addpoints_cmd(self, ctx: commands.Context) -> None:
+        reply = eco.handle_addpoints(self._points, ctx.author.name, _args(ctx), _is_privileged(ctx))
+        await self._reply(ctx, reply)
+
+    @commands.command(name="p", aliases=["play"])
+    async def play_cmd(self, ctx: commands.Context) -> None:
+        reply = await eco.handle_play(self._points, self._soundboard, ctx.author.name, _args(ctx))
+        await self._reply(ctx, reply)
+
+    @commands.command(name="tts")
+    async def tts_cmd(self, ctx: commands.Context) -> None:
+        reply = await eco.handle_tts(self._points, self._soundboard, ctx.author.name, _args(ctx))
+        await self._reply(ctx, reply)
+
+    @commands.command(name="audios", aliases=["sons", "sounds"])
+    async def audios_cmd(self, ctx: commands.Context) -> None:
+        await self._reply(ctx, eco.handle_audios(self._soundboard))
+
+    @commands.command(name="stop")
+    async def stop_cmd(self, ctx: commands.Context) -> None:
+        await self._reply(ctx, await eco.handle_stop(self._soundboard))
+
+    @commands.command(name="reload")
+    async def reload_cmd(self, ctx: commands.Context) -> None:
+        await self._reply(ctx, eco.handle_reload(self._soundboard, _is_privileged(ctx)))
+
+    @commands.command(name="status")
+    async def status_cmd(self, ctx: commands.Context) -> None:
+        await self._reply(ctx, eco.handle_status(self._soundboard))
+
+    @commands.command(name="sorteio")
+    async def sorteio_cmd(self, ctx: commands.Context) -> None:
+        reply, minutes = eco.handle_sorteio(self._raffle, _args(ctx), ctx.author.is_broadcaster)
+        await self._reply(ctx, reply)
+        if minutes is not None:
+            self._raffle_task = asyncio.create_task(self._finish_raffle_later(ctx, minutes * 60))
+
+    @commands.command(name="join")
+    async def join_cmd(self, ctx: commands.Context) -> None:
+        eco.handle_join(self._raffle, ctx.author.name)
+
+    async def _finish_raffle_later(self, ctx: commands.Context, delay_seconds: float) -> None:
+        await asyncio.sleep(delay_seconds)
+        winner, prize = self._raffle.finish(self._points)
+        await self._reply(ctx, eco.raffle_result_reply(winner, prize))
