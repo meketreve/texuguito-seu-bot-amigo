@@ -1,6 +1,6 @@
 # Handoff
 
-_Última atualização: 2026-09-13 — último commit de código: `3247bc8` (`master`, sincronizado
+_Última atualização: 2026-09-13 — último commit de código: `0b09c66` (`master`, sincronizado
 com `origin`). Repo ainda **privado**._
 
 ## Estado atual
@@ -48,8 +48,8 @@ com `origin`). Repo ainda **privado**._
    texuguito) e criou um app novo. O `.env` desta máquina ainda tem o app apagado
    (`check_setup` confirma: "Twitch recusou"). O primeiro setup falhou porque o
    SpacetimeDB (iniciado pela sessão do projeto `nos`) ocupava a porta 3000; ele foi
-   encerrado a pedido do usuário e a porta de retorno do OAuth virou **17563** (sem
-   commit ainda). O app novo precisa de `http://localhost:17563` nas Redirect URLs.
+   encerrado a pedido do usuário e a porta de retorno do OAuth virou **17563**
+   (`0b09c66`). O app novo precisa de `http://localhost:17563` nas Redirect URLs.
    Falta o usuário rodar `.venv/bin/python -m chat_parade.oauth_setup`. O
    segredo do app novo apareceu no terminal compartilhado com o Claude: sugerido gerar
    um "Novo segredo" nessa configuração. Quem digita as credenciais é o usuário.
