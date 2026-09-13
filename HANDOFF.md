@@ -1,6 +1,6 @@
 # Handoff
 
-_Última atualização: 2026-09-13 — último commit de código: `762282c` (`master`, sincronizado
+_Última atualização: 2026-09-13 — último commit de código: `3247bc8` (`master`, sincronizado
 com `origin`). Repo ainda **privado**._
 
 ## Estado atual
@@ -25,32 +25,60 @@ com `origin`). Repo ainda **privado**._
   "Pontos e áudios", "Vindo do texuguito", Licença).
 - Dados do texuguito já copiados nesta máquina: `data/points.json` (48 saldos) e
   `audios/` (49 áudios), ambos no `.gitignore`.
-- Testes: `.venv` criado nesta máquina; `.venv/bin/python -m pytest` → 145 passando.
+- **`run.bat` faz tudo pro usuário final** (`3247bc8`): acha o Python 3.10+ (oferece
+  `winget` ou abre python.org), cria `.venv` própria, só reinstala dependências quando o
+  `requirements.txt` muda (carimbo em `.venv/requirements.installed`), roda
+  `chat_parade.check_setup` e, se preciso, `chat_parade.oauth_setup`; `run.bat setup`
+  força a configuração.
+  - `check_setup.py`: exit 0 ok / 1 precisa configurar (sem `.env`, Twitch recusou,
+    token inválido, faltam escopos) / 2 sem internet (inicia mesmo assim) / 3 porta do
+    overlay ocupada (já aberto). Renova e salva o token quando dá certo.
+  - `oauth_setup.py`: canal e `BROADCASTER_ID` vêm do login de quem autoriza (não
+    pergunta mais o canal); Enter mantém ID/segredo atuais; abre o painel da Twitch com
+    passo a passo; checa a porta 3000 **antes** de abrir o navegador (sem
+    `SO_REUSEADDR` no Windows, que deixaria dividir a porta com outro programa);
+    preserva `DATA_DIR`/`OVERLAY_PORT`/`AUDIO_DIR`/`AUDIO_VOLUME` ao reescrever o `.env`.
+- Testes: `.venv` criado nesta máquina; `.venv/bin/python -m pytest` → 157 passando.
 - Fim de linha: `.gitattributes` com `* text=auto eol=crlf` (LF no repo, CRLF no checkout).
 
 ## Próximos passos
 
-0. **Segurança do `texuguito-seu-bot-amigo` (repo já público):** o histórico tem um
-   `.tio.tokens.json` com access token da Twitch (commits `289642e`, `cee15ef`) e um
-   `points.json` com nicks/pontos de viewers. Revogar desconectando o app em
-   twitch.tv/settings/connections (provavelmente já expirou, não verificado). Também
-   versiona ~48 áudios de `files/` e o `.claude/settings.local.json`.
-1. **Tornar o chat-parade público** — o usuário pediu pra **esperar**; só fazer quando
+0. **Gerar o `.env` com o app novo da Twitch.** Em 2026-09-13 o usuário revogou o
+   token e **apagou o app antigo** (resolvendo o token vazado no histórico do
+   texuguito) e criou um app novo. O `.env` desta máquina ainda tem o app apagado
+   (`check_setup` confirma: "Twitch recusou"). O usuário tentou o setup e falhou porque
+   o **SpacetimeDB (projeto `nos`) ocupa a porta 3000** nesta máquina: parar o
+   SpacetimeDB antes de rodar `.venv/bin/python -m chat_parade.oauth_setup`. O
+   segredo do app novo apareceu no terminal compartilhado com o Claude: sugerido gerar
+   um "Novo segredo" nessa configuração. Quem digita as credenciais é o usuário.
+1. **Rodar o `run.bat` numa máquina Windows.** Ele **nunca foi executado**: não há
+   Windows/Wine nesta máquina; só a lógica Python foi testada (incluindo `check_setup`
+   contra a Twitch real e o aviso de porta 3000 ocupada). Conferir: Python ausente
+   (winget), primeira instalação no `.venv`, setup abrindo sozinho, `run.bat setup`,
+   segunda janela avisando que já está aberto.
+2. **Tornar o chat-parade público** — o usuário pediu pra **esperar**; só fazer quando
    ele mandar. Até lá, o link no README do texuguito arquivado dá 404 pra quem não é
    dono. O histórico do chat-parade já foi checado: sem tokens, `.env`/`viewers.json`
-   nunca commitados. Comando: `gh repo edit meketreve/chat-parade --visibility public
+   nunca commitados. (O `HANDOFF.md` antigo cita os commits do token vazado, mas o
+   token morreu junto com o app.) Comando: `gh repo edit meketreve/chat-parade --visibility public
    --accept-visibility-change-consequences`.
-2. **Testar ao vivo no OBS com o chat real.** Verificado só: suíte de testes + teste de
+3. **Testar ao vivo no OBS com o chat real.** Verificado só: suíte de testes + teste de
    ponta a ponta local (servidor real + overlay no navegador + gTTS real + fila + `!stop`
    + áudio quebrado no meio da fila), **sem Twitch**. Não verificado: loop de pontos com
    chatters reais, `!sorteio` até o fim, áudio dentro do Browser Source do OBS
    ("Controlar áudio via OBS"), movimento dos viewers com o chat real.
-3. **Outros clones do repositório** (ex.: a máquina Windows): depois do pull, rodar
+4. **Outros clones do repositório** (ex.: a máquina Windows): depois do pull, rodar
    `git rm --cached -r -q . && git reset --hard` com o working tree limpo, pra
    reescrever os arquivos com o fim de linha novo.
 
 ## Decisões em aberto
 
+- **Texuguito continua público e arquivado.** O token do histórico já não vale nada,
+  mas o `points.json` (nicks + pontos de 48 viewers) e os áudios seguem visíveis. O
+  usuário decidiu só revogar. Se quiser apagar: `gh auth refresh -h github.com -s
+  delete_repo` e `gh repo delete meketreve/texuguito-seu-bot-amigo` (quem roda é o
+  usuário); depois tirar o link do README do chat-parade. O clone local tem todo o
+  histórico, incluindo a branch `master`.
 - **`!stop` liberado pra todos** (como era no texuguito): qualquer viewer pode cortar um
   áudio que outro pagou. Talvez restringir a mod/broadcaster.
 - **`!addpoints` aceita valor negativo** (como no texuguito), então o saldo pode ficar
