@@ -10,35 +10,43 @@ from chat_parade.config import Config
 TOKEN_URL = "https://id.twitch.tv/oauth2/token"
 
 
-def refresh_token(config: Config) -> Config | None:
-    """Trades the stored refresh token for a fresh access token.
-
-    Mirrors texuguito-seu-bot-amigo's TokenManager.refresh_token: same app,
-    same grant. Returns None on any failure so the caller can fall back to
-    the token it already has instead of crashing the whole bot over a
-    renewal that didn't work.
-    """
+def request_refresh(config: Config) -> requests.Response:
+    """POSTs the refresh grant. Raises requests.RequestException when Twitch
+    can't be reached; callers tell "rejected" from "offline" by that."""
     payload = {
         "client_id": config.client_id,
         "client_secret": config.client_secret,
         "grant_type": "refresh_token",
         "refresh_token": config.refresh_token,
     }
+    return requests.post(TOKEN_URL, data=payload, timeout=10)
 
-    try:
-        response = requests.post(TOKEN_URL, data=payload, timeout=10)
-    except Exception:
-        return None
 
-    if response.status_code != 200:
-        return None
-
+def refreshed_config(config: Config, response: requests.Response) -> Config:
     data = response.json()
     return dataclasses.replace(
         config,
         token=data["access_token"],
         refresh_token=data.get("refresh_token", config.refresh_token),
     )
+
+
+def refresh_token(config: Config) -> Config | None:
+    """Trades the stored refresh token for a fresh access token.
+
+    Returns None on any failure so the caller can fall back to the token it
+    already has instead of crashing the whole bot over a renewal that didn't
+    work.
+    """
+    try:
+        response = request_refresh(config)
+    except Exception:
+        return None
+
+    if response.status_code != 200:
+        return None
+
+    return refreshed_config(config, response)
 
 
 def update_env_file(env_path: Path, token: str, refresh_token: str) -> None:

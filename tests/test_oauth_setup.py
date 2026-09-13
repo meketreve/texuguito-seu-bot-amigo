@@ -7,7 +7,8 @@ from chat_parade.oauth_setup import (
     SCOPES,
     build_auth_url,
     exchange_code_for_token,
-    fetch_broadcaster_id,
+    fetch_account,
+    open_callback_server,
     preserved_settings,
     write_env_file,
 )
@@ -64,39 +65,81 @@ def test_exchange_code_for_token_raises_when_no_access_token(monkeypatch):
         exchange_code_for_token("abc123", "shh", "bad-code")
 
 
-def test_fetch_broadcaster_id_returns_id_from_helix_users(monkeypatch):
+def test_fetch_account_returns_id_and_login_from_helix_users(monkeypatch):
     def fake_get(url, headers, timeout):
         assert url == "https://api.twitch.tv/helix/users"
         assert headers == {"Client-ID": "abc123", "Authorization": "Bearer tok"}
 
         class FakeResponse:
             def json(self):
-                return {"data": [{"id": "999"}]}
+                return {"data": [{"id": "999", "login": "MeuCanal"}]}
 
         return FakeResponse()
 
     monkeypatch.setattr("chat_parade.oauth_setup.requests.get", fake_get)
 
-    broadcaster_id = fetch_broadcaster_id("abc123", "tok")
+    assert fetch_account("abc123", "tok") == ("999", "meucanal")
 
-    assert broadcaster_id == "999"
+
+def test_open_callback_server_returns_none_when_port_is_taken(monkeypatch):
+    """Regression test: another program on the redirect port (e.g. a dev
+    server on 3000) used to crash setup with a raw OSError traceback, after
+    the browser had already been sent to Twitch."""
+    import socket
+
+    blocker = socket.socket()
+    blocker.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    blocker.bind(("localhost", 0))
+    blocker.listen()
+    monkeypatch.setattr("chat_parade.oauth_setup.REDIRECT_PORT", blocker.getsockname()[1])
+    try:
+        assert open_callback_server() is None
+    finally:
+        blocker.close()
 
 
 def test_preserved_settings_defaults_when_env_missing(tmp_path):
-    data_dir, overlay_port = preserved_settings(tmp_path / "does-not-exist.env")
+    settings = preserved_settings(tmp_path / "does-not-exist.env")
 
-    assert data_dir == "data"
-    assert overlay_port == 8901
+    assert settings == {"DATA_DIR": "data", "OVERLAY_PORT": "8901"}
 
 
 def test_preserved_settings_reads_existing_env_values(tmp_path):
     env_path = tmp_path / ".env"
     env_path.write_text("DATA_DIR=meus_dados\nOVERLAY_PORT=9999\n", encoding="utf-8")
 
-    data_dir, overlay_port = preserved_settings(env_path)
+    settings = preserved_settings(env_path)
 
-    assert data_dir == "meus_dados"
-    assert overlay_port == 9999
+    assert settings == {"DATA_DIR": "meus_dados", "OVERLAY_PORT": "9999"}
+
+
+def test_rerunning_setup_keeps_audio_settings_and_drops_old_credentials(tmp_path):
+    """Regression test: re-running setup (e.g. after swapping the Twitch app)
+    used to rewrite .env with only DATA_DIR/OVERLAY_PORT, dropping AUDIO_DIR
+    and AUDIO_VOLUME."""
+    env_path = tmp_path / ".env"
+    env_path.write_text(
+        "CLIENT_ID=app-velho\nTOKEN=token-velho\nAUDIO_DIR=meus-sons\nAUDIO_VOLUME=0.4\n",
+        encoding="utf-8",
+    )
+
+    write_env_file(
+        env_path,
+        client_id="app-novo",
+        client_secret="shh",
+        token="token-novo",
+        refresh_token="reftok",
+        broadcaster_id="999",
+        channel="meucanal",
+        settings=preserved_settings(env_path),
+    )
+
+    content = env_path.read_text(encoding="utf-8")
+    assert "AUDIO_DIR=meus-sons" in content
+    assert "AUDIO_VOLUME=0.4" in content
+    assert "DATA_DIR=data" in content
+    assert "app-velho" not in content
+    assert "token-velho" not in content
 
 
 def test_write_env_file_writes_all_fields(tmp_path):

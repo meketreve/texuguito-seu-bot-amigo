@@ -53,7 +53,7 @@ async def _run_until_error(*coroutines) -> None:
                 raise exc
     except twitchio.errors.AuthenticationError:
         print("[chat-parade] token da Twitch invalido ou expirado.")
-        print("[chat-parade] gere um token novo (veja 'Se o token expirar' no README) e tente de novo.")
+        print("[chat-parade] rode o run.bat de novo: ele refaz a conexao com a Twitch sozinho.")
 
 
 def _load_and_refresh_config() -> Config:

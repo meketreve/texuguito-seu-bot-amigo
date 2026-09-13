@@ -12,24 +12,37 @@ tocam pelo próprio overlay, então o OBS captura junto com o Browser Source.
 
 ## Setup
 
-Rode `run.bat`: instala as dependências e, se não achar um `.env`, dispara
-`python -m chat_parade.oauth_setup` — abre o navegador pra você autorizar o
-app Twitch, captura o código de retorno num servidor local
-(`http://localhost:3000`), troca por token+refresh token e já salva tudo em
-`.env`. Da próxima vez que rodar, o `.env` já existe e ele pula direto pro
-app.
+No Windows, é só dar dois cliques no **`run.bat`**. Ele cuida de tudo:
+
+1. **Python:** se não tiver o Python 3.10+, oferece instalar pelo `winget` (ou
+   abre a página de download).
+2. **Dependências:** instala tudo numa pasta `.venv` própria, sem mexer no
+   Python do sistema. Só reinstala quando o `requirements.txt` muda.
+3. **Twitch:** confere se as credenciais do `.env` ainda funcionam. Na
+   primeira vez, ou se o app da Twitch foi apagado, o acesso foi revogado ou o
+   chat-parade passou a precisar de uma permissão nova, ele abre a
+   configuração sozinho: mostra o passo a passo pra criar o app no painel da
+   Twitch, pede o ID e o segredo do cliente e abre o navegador pra você
+   autorizar (faça login com a conta **dona do canal**; o canal é descoberto
+   por ela).
+4. **Inicia** o chat-parade. Se ele já estiver aberto em outra janela, avisa em
+   vez de abrir duas vezes.
+
+Pra trocar de app ou de conta, rode `run.bat setup`. Na configuração, Enter
+mantém o ID e o segredo atuais.
+
+O app da Twitch precisa ter `http://localhost:3000` nas URLs de
+redirecionamento OAuth, e essa porta precisa estar livre durante a
+configuração (servidores de desenvolvimento costumam usar a 3000). As
+permissões pedidas são só as que o app usa:
+`chat:read chat:edit moderator:read:chatters bits:read`.
 
 Sem `run.bat` (Linux/Mac ou manual):
 
-1. `pip install -r requirements.txt`
-2. `python -m chat_parade.oauth_setup` (pede `CLIENT_ID`, `CLIENT_SECRET` e o
-   nome do canal, faz o fluxo OAuth e escreve o `.env`)
-3. Rode os testes: `pytest`
-4. Suba o app: `python -m chat_parade.main`
-
-O app Twitch precisa ter `http://localhost:3000` cadastrado nas suas
-Redirect URLs (dev.twitch.tv/console/apps). O escopo pedido é só o que o app
-usa: `chat:read chat:edit moderator:read:chatters bits:read`.
+1. `python -m venv .venv` e `.venv/bin/pip install -r requirements.txt`
+2. `.venv/bin/python -m chat_parade.oauth_setup` (configura a Twitch e escreve o `.env`)
+3. Rode os testes: `.venv/bin/python -m pytest`
+4. Suba o app: `.venv/bin/python -m chat_parade.main`
 
 O processo não abre navegador nenhum — ele imprime no console algo como:
 
@@ -114,11 +127,11 @@ mesmas e os escopos que ele pede já incluem os do chat-parade.
 
 ## Se o token expirar
 
-Não precisa fazer nada: toda vez que o app sobe, ele tenta renovar o access
-token sozinho usando o `REFRESH_TOKEN` guardado no `.env` e já regrava `TOKEN`/`REFRESH_TOKEN` atualizados
-no arquivo. Se a renovação falhar (ex: refresh token revogado), ele avisa no
-console e tenta conectar com o token atual mesmo assim — nesse caso, rode
-`python -m chat_parade.oauth_setup` de novo pra reautorizar do zero.
+Não precisa fazer nada: toda vez que o app sobe, ele renova o token sozinho
+usando o `REFRESH_TOKEN` guardado no `.env`. Se a Twitch recusar (app apagado,
+segredo trocado, acesso revogado), o `run.bat` percebe e abre a configuração de
+novo. Fora do `run.bat`, rode `python -m chat_parade.check_setup` pra saber se
+as credenciais funcionam e `python -m chat_parade.oauth_setup` pra refazer.
 
 ## Créditos
 
