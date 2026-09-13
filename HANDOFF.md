@@ -1,16 +1,24 @@
 # Handoff
 
-_Última atualização: 2026-09-13 — último commit de código: `3ef08b9` (`master`, sincronizado
-com `origin`). Repo ainda **privado**._
+_Última atualização: 2026-09-13 — último commit de código: "Rename the project to Texuguito" (`master`, sincronizado
+com `origin`). O usuário vai deixar o repo **público**._
 
 ## Estado atual
+
+- **Projeto renomeado pra Texuguito** (2026-09-13): o repo do GitHub virou
+  `meketreve/texuguito-seu-bot-amigo` (o `chat-parade` antigo redireciona; o remote local
+  já aponta pro nome novo). Nome visível trocado em README, `CLAUDE.md`, `run.bat`,
+  mensagens do console (`[texuguito]`), overlay e respostas do bot. A pasta local e o
+  pacote Python continuam `chat_parade` (decisão do usuário, pra não quebrar nada).
+  O repo antigo do Texuguito (só o bot) foi **apagado** do GitHub pelo usuário; a pasta
+  local dele ainda existe na máquina do usuário (com a branch `master` que só existia
+  no remoto).
 
 - Overlay: viewers vagam pelo rodapé com sprite LPC (andar → parar → olhar em volta),
   cor/chapéu/acessório via chat, decorações de sub/mod/broadcaster, `!dança`, cheer.
   Constantes de ritmo no topo de `web/overlay.js`.
-- **Texuguito-seu-bot-amigo incorporado** (`762282c`): pontos, soundboard, TTS e
-  sorteio agora fazem parte do chat-parade. O repo do texuguito foi **arquivado** no
-  GitHub (`9df84db`: aviso no README apontando pro chat-parade).
+- **Bot do Texuguito original incorporado** (`762282c`): pontos, soundboard, TTS e
+  sorteio.
   - `chat_parade/points.py` — `PointsStore` (`data/points.json`, mesmo formato do
     texuguito) e o loop de 1 ponto/min (presente em 2 checagens seguidas).
   - `chat_parade/soundboard.py` — áudios em `audios/<preço>/<nome>.<ext>`, TTS (gTTS
@@ -22,7 +30,7 @@ com `origin`). Repo ainda **privado**._
     servido por `/audios/...` e `/tts/<id>`. Sem overlay aberto, `!p`/`!tts` recusam
     sem cobrar. Sem pygame.
 - `LICENSE` GPL-3.0 (`2dd971b`, texto canônico). README atualizado (comandos,
-  "Pontos e áudios", "Vindo do texuguito", Licença).
+  "Pontos e áudios", "Vindo da versão antiga do Texuguito", Licença).
 - Dados do texuguito já copiados nesta máquina: `data/points.json` (48 saldos) e
   `audios/` (49 áudios), ambos no `.gitignore`.
 - **`run.bat` faz tudo pro usuário final** (`3247bc8`): acha o Python 3.10+ (oferece
@@ -41,7 +49,7 @@ com `origin`). Repo ainda **privado**._
 - **Twitch conectada com o app novo** (2026-09-13): o app antigo foi apagado pelo usuário
   (o token vazado no histórico do texuguito morreu junto); `.env` gerado pelo
   `oauth_setup`, `check_setup` OK e o bot entrou no chat de `meketreve` num teste de 15s.
-- Testes: `.venv` criado nesta máquina; `.venv/bin/python -m pytest` → 157 passando.
+- Testes: `.venv` criado nesta máquina; `.venv/bin/python -m pytest` → 158 passando.
 - Fim de linha: `.gitattributes` com `* text=auto eol=crlf` (LF no repo, CRLF no checkout).
 
 ## Próximos passos
@@ -51,11 +59,13 @@ com `origin`). Repo ainda **privado**._
    contra a Twitch real e o aviso de porta de retorno ocupada). Conferir: Python ausente
    (winget), primeira instalação no `.venv`, setup abrindo sozinho, `run.bat setup`,
    segunda janela avisando que já está aberto.
-2. **Tornar o chat-parade público** — o usuário pediu pra **esperar**; só fazer quando
-   ele mandar. Até lá, o link no README do texuguito arquivado dá 404 pra quem não é
-   dono. O histórico do chat-parade já foi checado: sem tokens, `.env`/`viewers.json`
-   nunca commitados. (O `HANDOFF.md` antigo cita os commits do token vazado, mas o
-   token morreu junto com o app.) Comando: `gh repo edit meketreve/chat-parade --visibility public
+2. **Tornar o repo público** — o usuário pediu pra **esperar**; só fazer quando ele
+   mandar. Histórico já checado: sem tokens nem dados pessoais, `.env`/`viewers.json`/
+   `points.json` nunca commitados, autor sempre o e-mail noreply. `HANDOFF.md`,
+   `CLAUDE.md` e `docs/superpowers/` ficariam visíveis (o handoff antigo cita os commits
+   do token vazado do Texuguito antigo, que morreu junto com o app). Sugerida a
+   descrição "Overlay pixel art pra Twitch + bot de pontos, áudios e TTS". Comando:
+   `gh repo edit meketreve/texuguito-seu-bot-amigo --visibility public
    --accept-visibility-change-consequences`.
 3. **Testar ao vivo no OBS com o chat real.** Verificado só: suíte de testes + teste de
    ponta a ponta local (servidor real + overlay no navegador + gTTS real + fila + `!stop`
@@ -68,12 +78,9 @@ com `origin`). Repo ainda **privado**._
 
 ## Decisões em aberto
 
-- **Texuguito continua público e arquivado.** O token do histórico já não vale nada,
-  mas o `points.json` (nicks + pontos de 48 viewers) e os áudios seguem visíveis. O
-  usuário decidiu só revogar. Se quiser apagar: `gh auth refresh -h github.com -s
-  delete_repo` e `gh repo delete meketreve/texuguito-seu-bot-amigo` (quem roda é o
-  usuário); depois tirar o link do README do chat-parade. O clone local tem todo o
-  histórico, incluindo a branch `master`.
+- **Recursos do Texuguito antigo que não vieram:** banner/tabelas coloridas (`rich`), log
+  das mensagens do chat no console e em `logs/`, build `.exe` (PyInstaller). Portar se o
+  usuário pedir (o log do chat é o mais provável).
 - **`!stop` liberado pra todos** (como era no texuguito): qualquer viewer pode cortar um
   áudio que outro pagou. Talvez restringir a mod/broadcaster.
 - **`!addpoints` aceita valor negativo** (como no texuguito), então o saldo pode ficar

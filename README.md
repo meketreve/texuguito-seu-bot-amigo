@@ -1,14 +1,14 @@
-# chat-parade
+# Texuguito - Seu Bot Amigo
 
-Overlay pixel art pra live na Twitch: todo mundo assistindo aparece andando
-no rodapé da stream, com avatar gerado automaticamente e personalizável via
-comandos no chat.
+Bot pra live na Twitch com overlay pixel art:
 
-Também é o bot de pontos do canal (antigo
-[texuguito-seu-bot-amigo](https://github.com/meketreve/texuguito-seu-bot-amigo)):
-quem assiste ganha pontos por tempo no chat e gasta tocando áudios (`!p`),
-mandando mensagens em voz (`!tts`) ou participando de sorteios. Os áudios
-tocam pelo próprio overlay, então o OBS captura junto com o Browser Source.
+- **Desfile do chat:** todo mundo assistindo aparece andando no rodapé da
+  stream, com avatar gerado automaticamente e personalizável via comandos no
+  chat.
+- **Pontos do canal:** quem assiste ganha pontos por tempo no chat e gasta
+  tocando áudios (`!p`), mandando mensagens em voz (`!tts`) ou participando de
+  sorteios. Os áudios tocam pelo próprio overlay, então o OBS captura junto
+  com o Browser Source.
 
 ## Setup
 
@@ -20,12 +20,12 @@ No Windows, é só dar dois cliques no **`run.bat`**. Ele cuida de tudo:
    Python do sistema. Só reinstala quando o `requirements.txt` muda.
 3. **Twitch:** confere se as credenciais do `.env` ainda funcionam. Na
    primeira vez, ou se o app da Twitch foi apagado, o acesso foi revogado ou o
-   chat-parade passou a precisar de uma permissão nova, ele abre a
+   Texuguito passou a precisar de uma permissão nova, ele abre a
    configuração sozinho: mostra o passo a passo pra criar o app no painel da
    Twitch, pede o ID e o segredo do cliente e abre o navegador pra você
    autorizar (faça login com a conta **dona do canal**; o canal é descoberto
    por ela).
-4. **Inicia** o chat-parade. Se ele já estiver aberto em outra janela, avisa em
+4. **Inicia** o Texuguito. Se ele já estiver aberto em outra janela, avisa em
    vez de abrir duas vezes.
 
 Pra trocar de app ou de conta, rode `run.bat setup`. Na configuração, Enter
@@ -48,8 +48,8 @@ Sem `run.bat` (Linux/Mac ou manual):
 O processo não abre navegador nenhum — ele imprime no console algo como:
 
 ```
-[chat-parade] overlay pronto em: http://localhost:8901/overlay
-[chat-parade] cole essa URL como Browser Source no OBS.
+[texuguito] overlay pronto em: http://localhost:8901/overlay
+[texuguito] cole essa URL como Browser Source no OBS.
 ```
 
 Cole essa URL num Browser Source do OBS (largura/altura à sua escolha, fundo
@@ -119,12 +119,13 @@ anel dourado ao redor do avatar por alguns segundos.
 - Opcional no `.env`: `AUDIO_DIR` (outra pasta de áudios) e `AUDIO_VOLUME`
   (0.0 a 1.0, padrão 1.0).
 
-### Vindo do texuguito
+### Vindo da versão antiga do Texuguito
 
-O `points.json` do texuguito tem o mesmo formato: copie pra
-`data/points.json` e os saldos continuam. Copie as subpastas de `files/` pra
-`audios/`. O `.env` do texuguito também serve como está: as variáveis são as
-mesmas e os escopos que ele pede já incluem os do chat-parade.
+A versão antiga (só o bot de pontos, com `bot.py`) guardava os mesmos dados:
+copie o `points.json` dela pra `data/points.json` e os saldos continuam, e as
+subpastas de `files/` pra `audios/`. O `.env` antigo também serve, desde que o
+app da Twitch dele ainda exista; se não, o `run.bat` percebe e abre a
+configuração.
 
 ## Se o token expirar
 

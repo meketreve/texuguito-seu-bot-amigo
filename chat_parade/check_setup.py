@@ -49,14 +49,14 @@ def token_scopes(token: str) -> set[str] | None:
 
 def check(env_path: Path) -> tuple[int, str]:
     if not env_is_complete(env_path):
-        return EXIT_NEEDS_SETUP, "O chat-parade ainda não está conectado à Twitch."
+        return EXIT_NEEDS_SETUP, "O Texuguito ainda não está conectado à Twitch."
 
     config = load_config(env_path)
 
     if not port_is_free(config.overlay_port):
         return (
             EXIT_PORT_BUSY,
-            f"A porta {config.overlay_port} já está em uso: o chat-parade provavelmente já está "
+            f"A porta {config.overlay_port} já está em uso: o Texuguito provavelmente já está "
             "aberto em outra janela. Feche a outra janela e tente de novo.",
         )
 
@@ -84,7 +84,7 @@ def check(env_path: Path) -> tuple[int, str]:
     if missing:
         return (
             EXIT_NEEDS_SETUP,
-            "O chat-parade precisa de permissões novas na Twitch "
+            "O Texuguito precisa de permissões novas na Twitch "
             f"({', '.join(sorted(missing))}). Vamos autorizar de novo.",
         )
 

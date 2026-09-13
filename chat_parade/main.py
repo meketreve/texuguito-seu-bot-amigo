@@ -52,8 +52,8 @@ async def _run_until_error(*coroutines) -> None:
             if exc is not None:
                 raise exc
     except twitchio.errors.AuthenticationError:
-        print("[chat-parade] token da Twitch invalido ou expirado.")
-        print("[chat-parade] rode o run.bat de novo: ele refaz a conexao com a Twitch sozinho.")
+        print("[texuguito] token da Twitch invalido ou expirado.")
+        print("[texuguito] rode o run.bat de novo: ele refaz a conexao com a Twitch sozinho.")
 
 
 def _load_and_refresh_config() -> Config:
@@ -61,7 +61,7 @@ def _load_and_refresh_config() -> Config:
 
     refreshed = refresh_token(config)
     if refreshed is None:
-        print("[chat-parade] não foi possível renovar o token, tentando conectar com o token atual...")
+        print("[texuguito] não foi possível renovar o token, tentando conectar com o token atual...")
         return config
 
     update_env_file(refreshed.env_path, refreshed.token, refreshed.refresh_token)
@@ -72,8 +72,8 @@ async def main() -> None:
     config = _load_and_refresh_config()
     store, points, events, app, broadcaster, bot = build_components(config)
 
-    print(f"[chat-parade] overlay pronto em: http://localhost:{config.overlay_port}/overlay")
-    print("[chat-parade] cole essa URL como Browser Source no OBS.")
+    print(f"[texuguito] overlay pronto em: http://localhost:{config.overlay_port}/overlay")
+    print("[texuguito] cole essa URL como Browser Source no OBS.")
 
     await _run_until_error(
         bot.start(),
@@ -91,7 +91,7 @@ def run() -> None:
         asyncio.run(main())
     except KeyboardInterrupt:
         print()
-        print("[chat-parade] encerrado.")
+        print("[texuguito] encerrado.")
 
 
 if __name__ == "__main__":

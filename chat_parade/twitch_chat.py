@@ -58,7 +58,7 @@ class ChatParadeBot(commands.Bot):
         self._raffle_task: asyncio.Task | None = None
 
     async def event_ready(self) -> None:
-        print(f"[chat-parade] conectado ao chat de {self.nick}")
+        print(f"[texuguito] conectado ao chat de {self.nick}")
 
     async def event_message(self, message) -> None:
         if message.echo or not message.author:

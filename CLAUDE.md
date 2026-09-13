@@ -1,4 +1,8 @@
-# chat-parade
+# Texuguito - Seu Bot Amigo
+
+Repo `meketreve/texuguito-seu-bot-amigo` (antes se chamava `chat-parade`; a pasta local e o
+pacote Python continuam `chat_parade`). Juntou o overlay "chat parade" com o bot de pontos
+do Texuguito original.
 
 ## Handoff entre sessões
 

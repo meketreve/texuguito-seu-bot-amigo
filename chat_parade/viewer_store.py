@@ -82,7 +82,7 @@ class ViewerStore:
         # fields. AttributeError: valid JSON whose top level is not an object
         # (a list or string has no .items()).
         except (ValueError, TypeError, AttributeError) as exc:
-            print(f"[chat-parade] {self._path} corrompido ou inválido ({exc}); iniciando vazio")
+            print(f"[texuguito] {self._path} corrompido ou inválido ({exc}); iniciando vazio")
             corrupt_path = self._path.with_suffix(self._path.suffix + ".corrupt")
             self._path.replace(corrupt_path)
             self._viewers = {}

@@ -82,7 +82,7 @@ async def handle_tts(
     try:
         url = await soundboard.make_tts(f"{username} enviou a mensagem: {' '.join(args)}")
     except Exception as exc:
-        print(f"[chat-parade] erro no TTS: {exc}")
+        print(f"[texuguito] erro no TTS: {exc}")
         points.add(username, TTS_COST)  # refund: nothing was played
         return "❌ Erro ao gerar o TTS. Seus pontos foram devolvidos."
     await soundboard.play(url)
@@ -112,7 +112,7 @@ def handle_reload(soundboard: Soundboard, is_privileged: bool) -> str | None:
 
 def handle_status(soundboard: Soundboard) -> str:
     return (
-        f"📊 [STATUS] Chat Parade está online! 🎵 {len(soundboard.clips)} áudios carregados. "
+        f"📊 [STATUS] Texuguito está online! 🎵 {len(soundboard.clips)} áudios carregados. "
         "🪙 Sistema de pontos ativo."
     )
 

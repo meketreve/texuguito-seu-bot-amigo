@@ -34,7 +34,7 @@ function loadImage(filename) {
     img.failed = false;
     img.onerror = () => {
       img.failed = true;
-      console.error(`[chat-parade] falha ao carregar asset: ${filename}`);
+      console.error(`[texuguito] falha ao carregar asset: ${filename}`);
     };
     img.src = `/static/assets/lpc/${filename}`;
     imageCache.set(filename, img);
@@ -47,7 +47,7 @@ async function loadManifest() {
     const response = await fetch("/static/assets/lpc/manifest.json");
     manifest = await response.json();
   } catch (err) {
-    console.error("[chat-parade] falha ao carregar manifest.json, tentando de novo em 3s:", err);
+    console.error("[texuguito] falha ao carregar manifest.json, tentando de novo em 3s:", err);
     setTimeout(loadManifest, 3000);
     return;
   }
@@ -257,12 +257,12 @@ function playNextAudio() {
   };
   audio.onended = finish;
   audio.onerror = () => {
-    console.error(`[chat-parade] falha ao tocar áudio: ${next.url}`);
+    console.error(`[texuguito] falha ao tocar áudio: ${next.url}`);
     finish();
   };
   currentAudio = audio;
   audio.play().catch((err) => {
-    console.error("[chat-parade] não foi possível tocar o áudio:", err);
+    console.error("[texuguito] não foi possível tocar o áudio:", err);
     finish();
   });
 }

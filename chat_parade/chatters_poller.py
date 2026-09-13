@@ -36,7 +36,7 @@ async def poll_once(
     try:
         chatters = await loop.run_in_executor(None, fetch_chatters, config)
     except Exception as exc:
-        print(f"[chat-parade] erro ao buscar chatters: {exc}")
+        print(f"[texuguito] erro ao buscar chatters: {exc}")
         return
 
     joined, left = store.sync_present_chatters(chatters)

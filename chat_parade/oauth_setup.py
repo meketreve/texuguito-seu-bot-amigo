@@ -122,7 +122,7 @@ class _OAuthCallbackHandler(BaseHTTPRequestHandler):
         if "code" in params:
             _OAuthCallbackHandler.auth_code = params["code"][0]
             _OAuthCallbackHandler.auth_state = params.get("state", [None])[0]
-            self._respond(200, "✅ Autorização concluída! Pode fechar esta janela e voltar pro chat-parade.")
+            self._respond(200, "✅ Autorização concluída! Pode fechar esta janela e voltar pro Texuguito.")
         elif "error" in params:
             error = params["error"][0]
             self._respond(400, f"❌ Erro na autorização: {error}")
@@ -189,7 +189,7 @@ def _ask(prompt: str, current: str | None) -> str:
 
 def _print_instructions(has_current: bool) -> None:
     print("=" * 60)
-    print("🎉 CHAT PARADE - CONFIGURAÇÃO DA TWITCH")
+    print("🎉 TEXUGUITO - CONFIGURAÇÃO DA TWITCH")
     print("=" * 60)
     print()
     if has_current:
@@ -203,7 +203,7 @@ def _print_instructions(has_current: bool) -> None:
     else:
         print("Primeiro crie um app da Twitch (vou abrir o painel no navegador):")
     print(f"  1. Em {DEV_CONSOLE_URL}, registre um aplicativo novo (Register Your Application).")
-    print("  2. Nome: qualquer um (ex: chat-parade-SEUCANAL).")
+    print("  2. Nome: qualquer um (ex: texuguito-SEUCANAL).")
     print(f"  3. URL de redirecionamento OAuth (OAuth Redirect URLs): {REDIRECT_URI}")
     print("  4. Categoria: Chat Bot. Tipo de cliente (Client Type): Confidencial. Crie o app.")
     print("  5. Em Gerenciar (Manage): copie o ID do cliente e gere um Novo segredo (New Secret).")
@@ -239,7 +239,7 @@ def main() -> int:
     state = secrets.token_urlsafe(16)
     auth_url = build_auth_url(client_id, state)
     print()
-    print("🔗 Abrindo o navegador pra você autorizar o chat-parade na Twitch...")
+    print("🔗 Abrindo o navegador pra você autorizar o Texuguito na Twitch...")
     webbrowser.open(auth_url)
     print("⏳ Aguardando a autorização... (feche esta janela pra cancelar)")
     print(f"   Se o navegador não abrir, copie este link: {auth_url}")

@@ -182,4 +182,4 @@ def test_ctrl_c_ends_with_a_message_instead_of_a_traceback(monkeypatch, capsys):
 
     run()
 
-    assert "[chat-parade] encerrado." in capsys.readouterr().out
+    assert "[texuguito] encerrado." in capsys.readouterr().out

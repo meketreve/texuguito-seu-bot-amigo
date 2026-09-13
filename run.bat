@@ -2,10 +2,10 @@
 setlocal
 chcp 65001 > nul
 cd /d "%~dp0"
-title Chat Parade
+title Texuguito
 cls
 echo ======================================================
-echo 🎉 Chat Parade
+echo 🎉 Texuguito
 echo ======================================================
 echo.
 
@@ -66,12 +66,12 @@ rem --- 5. Inicia -------------------------------------------------------------
 :run
 echo.
 echo ======================================================
-echo 🚀 Iniciando o chat-parade. Feche esta janela pra encerrar.
+echo 🚀 Iniciando o Texuguito. Feche esta janela pra encerrar.
 echo ======================================================
 echo.
 "%VENV_PY%" -m chat_parade.main
 echo.
-echo ⚠️  O chat-parade foi encerrado.
+echo ⚠️  O Texuguito foi encerrado.
 echo.
 pause
 exit /b 0
@@ -104,7 +104,7 @@ exit /b 1
 
 :venv_failed
 echo.
-echo ❌ Nao deu pra criar o ambiente do chat-parade na pasta .venv.
+echo ❌ Nao deu pra criar o ambiente do Texuguito na pasta .venv.
 echo    Reinstale o Python pelo python.org e abra o run.bat de novo.
 echo.
 pause

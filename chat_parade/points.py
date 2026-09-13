@@ -35,7 +35,7 @@ class PointsStore:
             raw = json.loads(self._path.read_text(encoding="utf-8"))
             self._points = {name.lower(): int(value) for name, value in raw.items()}
         except (ValueError, TypeError, AttributeError) as exc:
-            print(f"[chat-parade] {self._path} corrompido ou inválido ({exc}); iniciando vazio")
+            print(f"[texuguito] {self._path} corrompido ou inválido ({exc}); iniciando vazio")
             self._path.replace(self._path.with_suffix(self._path.suffix + ".corrupt"))
             self._points = {}
 
