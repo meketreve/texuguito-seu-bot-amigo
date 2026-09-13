@@ -1,6 +1,6 @@
 # Handoff
 
-_Última atualização: 2026-09-13 — último commit de código: `0b09c66` (`master`, sincronizado
+_Última atualização: 2026-09-13 — último commit de código: `3ef08b9` (`master`, sincronizado
 com `origin`). Repo ainda **privado**._
 
 ## Estado atual
@@ -38,21 +38,14 @@ com `origin`). Repo ainda **privado**._
     passo a passo; checa a porta de retorno **antes** de abrir o navegador (sem
     `SO_REUSEADDR` no Windows, que deixaria dividir a porta com outro programa);
     preserva `DATA_DIR`/`OVERLAY_PORT`/`AUDIO_DIR`/`AUDIO_VOLUME` ao reescrever o `.env`.
+- **Twitch conectada com o app novo** (2026-09-13): o app antigo foi apagado pelo usuário
+  (o token vazado no histórico do texuguito morreu junto); `.env` gerado pelo
+  `oauth_setup`, `check_setup` OK e o bot entrou no chat de `meketreve` num teste de 15s.
 - Testes: `.venv` criado nesta máquina; `.venv/bin/python -m pytest` → 157 passando.
 - Fim de linha: `.gitattributes` com `* text=auto eol=crlf` (LF no repo, CRLF no checkout).
 
 ## Próximos passos
 
-0. **Gerar o `.env` com o app novo da Twitch.** Em 2026-09-13 o usuário revogou o
-   token e **apagou o app antigo** (resolvendo o token vazado no histórico do
-   texuguito) e criou um app novo. O `.env` desta máquina ainda tem o app apagado
-   (`check_setup` confirma: "Twitch recusou"). O primeiro setup falhou porque o
-   SpacetimeDB (iniciado pela sessão do projeto `nos`) ocupava a porta 3000; ele foi
-   encerrado a pedido do usuário e a porta de retorno do OAuth virou **17563**
-   (`0b09c66`). O app novo precisa de `http://localhost:17563` nas Redirect URLs.
-   Falta o usuário rodar `.venv/bin/python -m chat_parade.oauth_setup`. O
-   segredo do app novo apareceu no terminal compartilhado com o Claude: sugerido gerar
-   um "Novo segredo" nessa configuração. Quem digita as credenciais é o usuário.
 1. **Rodar o `run.bat` numa máquina Windows.** Ele **nunca foi executado**: não há
    Windows/Wine nesta máquina; só a lógica Python foi testada (incluindo `check_setup`
    contra a Twitch real e o aviso de porta de retorno ocupada). Conferir: Python ausente
