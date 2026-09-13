@@ -3,6 +3,15 @@ const SPEED_MIN_FACTOR = 0.75;
 const SPEED_SPREAD_FACTOR = 0.5;
 const PIXELS_PER_WALK_FRAME = 8;
 
+// Wander behaviour: walk to a random spot, stand there a while, repeat.
+const MIN_WALK_DISTANCE_PX = 48;
+const IDLE_MIN_MS = 1500;
+const IDLE_MAX_MS = 5000;
+// While standing, a viewer occasionally glances around (front / left / right).
+const LOOK_MIN_MS = 1000;
+const LOOK_MAX_MS = 2500;
+const FACE_FRONT_CHANCE = 0.5;
+
 const canvas = document.getElementById("parade");
 const ctx = canvas.getContext("2d");
 
@@ -15,8 +24,8 @@ let frameWidth = 64;
 let frameHeight = 64;
 
 const imageCache = new Map(); // filename -> HTMLImageElement
-const shadingMaskCache = new Map(); // frameColumn -> HTMLCanvasElement (grayscale)
-const tintCache = new Map(); // "frameColumn|color" -> HTMLCanvasElement (tinted)
+const shadingMaskCache = new Map(); // "row:column" -> HTMLCanvasElement (grayscale)
+const tintCache = new Map(); // "row:column|color" -> HTMLCanvasElement (tinted)
 
 function loadImage(filename) {
   let img = imageCache.get(filename);
@@ -86,8 +95,11 @@ function resizeCanvas() {
   canvas.height = window.innerHeight;
   ctx.imageSmoothingEnabled = false; // pixel art: never interpolate between texels
   const y = laneY();
+  const maxX = Math.max(0, canvas.width - frameWidth);
   for (const viewer of viewers.values()) {
     viewer.y = y;
+    viewer.x = Math.min(viewer.x, maxX);
+    viewer.targetX = Math.min(viewer.targetX, maxX);
   }
 }
 
@@ -109,37 +121,105 @@ function initialDirection(username) {
   return hashUsername(username) % 2 === 0 ? 1 : -1;
 }
 
-// Deterministic per-username speed, used only for the initial spawn.
-function individualSpeed(username) {
-  const spread = Math.abs(hashUsername(username + "speed")) % 100;
-  return SPEED_PX_PER_SEC * (SPEED_MIN_FACTOR + (spread / 100) * SPEED_SPREAD_FACTOR);
-}
-
-// Genuinely random speed, re-rolled every time a viewer bounces off an edge.
+// Random speed, re-rolled at the start of every walk.
 function randomSpeed() {
   return SPEED_PX_PER_SEC * (SPEED_MIN_FACTOR + Math.random() * SPEED_SPREAD_FACTOR);
 }
 
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
+}
+
+// Picks a random destination on the lane at least MIN_WALK_DISTANCE_PX away
+// (when the lane is wide enough), so walks never degrade into a tiny shuffle.
+function pickTargetX(fromX) {
+  const maxX = Math.max(0, canvas.width - frameWidth);
+  const minDistance = Math.min(MIN_WALK_DISTANCE_PX, maxX / 2);
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const target = Math.random() * maxX;
+    if (Math.abs(target - fromX) >= minDistance) return target;
+  }
+  return fromX < maxX / 2 ? maxX : 0;
+}
+
+function startWalking(viewer) {
+  viewer.state = "walking";
+  viewer.targetX = pickTargetX(viewer.x);
+  viewer.direction = viewer.targetX >= viewer.x ? 1 : -1;
+  viewer.speed = randomSpeed();
+  viewer.distanceWalked = 0; // restart the walk cycle from its first stride
+  viewer.facingFront = false;
+}
+
+function startIdle(viewer, now, durationMs = randomBetween(IDLE_MIN_MS, IDLE_MAX_MS)) {
+  viewer.state = "idle";
+  viewer.idleUntil = now + durationMs;
+  viewer.nextLookAt = now + randomBetween(LOOK_MIN_MS, LOOK_MAX_MS);
+  viewer.facingFront = false;
+}
+
+// Standing still: every so often turn to face the camera or either side.
+function lookAround(viewer, now) {
+  if (Math.random() < FACE_FRONT_CHANCE) {
+    viewer.facingFront = true;
+  } else {
+    viewer.facingFront = false;
+    viewer.direction = Math.random() < 0.5 ? 1 : -1;
+  }
+  viewer.nextLookAt = now + randomBetween(LOOK_MIN_MS, LOOK_MAX_MS);
+}
+
+function updateMovement(viewer, now, deltaSeconds) {
+  if (viewer.state === "idle") {
+    if (now >= viewer.idleUntil) {
+      startWalking(viewer);
+    } else if (now >= viewer.nextLookAt) {
+      lookAround(viewer, now);
+    }
+    return;
+  }
+
+  const remaining = viewer.targetX - viewer.x;
+  const travelled = Math.min(viewer.speed * deltaSeconds, Math.abs(remaining));
+  viewer.x += Math.sign(remaining) * travelled;
+  viewer.distanceWalked += travelled;
+  if (Math.abs(viewer.targetX - viewer.x) < 0.5) {
+    viewer.x = viewer.targetX;
+    startIdle(viewer, now);
+  }
+}
+
+// Client-side wander state that must survive server updates for a viewer.
+const MOVEMENT_KEYS = [
+  "x", "targetX", "direction", "speed", "distanceWalked",
+  "state", "idleUntil", "nextLookAt", "facingFront",
+];
+
 function upsertViewer(payload) {
   const existing = viewers.get(payload.username);
-  const x = existing ? existing.x : randomX(frameWidth);
-  const direction = existing ? existing.direction : initialDirection(payload.username);
-  const speed = existing ? existing.speed : individualSpeed(payload.username);
-  const distanceWalked = existing ? existing.distanceWalked : 0;
   // The server sends seconds remaining, not booleans: turn them into absolute
   // deadlines on the same clock tick() uses so drawViewer can re-check them
   // every frame instead of latching a stale boolean until the next broadcast.
   const now = performance.now();
-  viewers.set(payload.username, {
+  const viewer = {
     ...payload,
-    x,
     y: laneY(),
-    direction,
-    speed,
-    distanceWalked,
     danceUntil: now + (payload.dance_remaining || 0) * 1000,
     cheerUntil: now + (payload.cheer_remaining || 0) * 1000,
-  });
+  };
+
+  if (existing) {
+    for (const key of MOVEMENT_KEYS) viewer[key] = existing[key];
+  } else {
+    viewer.x = randomX(frameWidth);
+    viewer.targetX = viewer.x;
+    viewer.direction = initialDirection(payload.username);
+    viewer.speed = randomSpeed();
+    viewer.distanceWalked = 0;
+    // Short random first pause so a batch of new arrivals doesn't set off in lockstep.
+    startIdle(viewer, now, randomBetween(0, IDLE_MIN_MS));
+  }
+  viewers.set(payload.username, viewer);
 }
 
 function removeViewer(username) {
@@ -181,14 +261,34 @@ function walkFrameColumn(distanceWalked) {
   return columns[step];
 }
 
-// Grayscale (luminance) render of the composed body+head layer for one walk
-// frame. This is the reusable "shading" that getTintedBase multiplies an
-// arbitrary color against — computed once per frame column, not per viewer.
+// Which sheet cell to draw this frame. Walking cycles the side-view walk
+// frames; standing uses the LPC idle frame (column 0, feet together), either
+// in side view or turned towards the camera (the "down" row). Only the
+// right-facing side row is used — left is drawn by mirroring it.
+function spritePose(viewer) {
+  if (viewer.state === "walking") {
+    return {
+      row: manifest.direction_row.right,
+      column: walkFrameColumn(viewer.distanceWalked),
+      mirrored: viewer.direction < 0,
+    };
+  }
+  const column = manifest.idle_frame_column ?? 0;
+  if (viewer.facingFront) {
+    return { row: manifest.direction_row.down, column, mirrored: false };
+  }
+  return { row: manifest.direction_row.right, column, mirrored: viewer.direction < 0 };
+}
+
+// Grayscale (luminance) render of the composed body+head layer for one sheet
+// cell. This is the reusable "shading" that getTintedBase multiplies an
+// arbitrary color against — computed once per (row, column), not per viewer.
 // Skips any base layer that failed to load rather than drawing a blank
 // image into the mask (see assetsReady's comment for why a failure can't
 // be allowed to block forever).
-function getShadingMask(frameColumn) {
-  let mask = shadingMaskCache.get(frameColumn);
+function getShadingMask(row, column) {
+  const key = `${row}:${column}`;
+  let mask = shadingMaskCache.get(key);
   if (mask) return mask;
 
   mask = document.createElement("canvas");
@@ -196,8 +296,8 @@ function getShadingMask(frameColumn) {
   mask.height = frameHeight;
   const mctx = mask.getContext("2d");
 
-  const sx = frameColumn * frameWidth;
-  const sy = manifest.direction_row.right * frameHeight;
+  const sx = column * frameWidth;
+  const sy = row * frameHeight;
 
   for (const layer of manifest.base_layers) {
     const img = loadImage(layer);
@@ -217,20 +317,20 @@ function getShadingMask(frameColumn) {
   }
   mctx.putImageData(imageData, 0, 0);
 
-  shadingMaskCache.set(frameColumn, mask);
+  shadingMaskCache.set(key, mask);
   return mask;
 }
 
-// Body+head tinted to `color`, cached per (frameColumn, color) so no combo is
+// Body+head tinted to `color`, cached per (row, column, color) so no combo is
 // ever recomputed. "multiply" against the grayscale mask approximates the
 // target color while keeping the sprite's shading; "destination-in" restores
 // the transparency multiply would otherwise flatten to opaque everywhere.
-function getTintedBase(frameColumn, color) {
-  const key = `${frameColumn}|${color}`;
+function getTintedBase(row, column, color) {
+  const key = `${row}:${column}|${color}`;
   let tinted = tintCache.get(key);
   if (tinted) return tinted;
 
-  const mask = getShadingMask(frameColumn);
+  const mask = getShadingMask(row, column);
 
   tinted = document.createElement("canvas");
   tinted.width = frameWidth;
@@ -250,21 +350,22 @@ function getTintedBase(frameColumn, color) {
 }
 
 // Skips drawing if `image` failed to load — see assetsReady's comment.
-function drawSpriteLayer(image, frameColumn, x, y) {
+function drawSpriteLayer(image, pose, x, y) {
   if (image.failed) return;
-  const sx = frameColumn * frameWidth;
-  const sy = manifest.direction_row.right * frameHeight;
+  const sx = pose.column * frameWidth;
+  const sy = pose.row * frameHeight;
   ctx.drawImage(image, sx, sy, frameWidth, frameHeight, x, y, frameWidth, frameHeight);
 }
 
 // Draws one fully-composed viewer at (x, y) in the CURRENT ctx transform.
 // Layer order: wings-behind, tinted body, hat, accessory, wings-in-front —
 // wings must straddle the body or they render entirely on top of it.
-// Mirrors horizontally when walking left, since only the right-facing row
-// of each sheet is ever loaded. Position is rounded to whole pixels so the
-// browser never bilinear-samples the sprite across a fractional offset.
-function drawCharacter(viewer, frameColumn, x, y) {
-  const mirrored = viewer.direction < 0;
+// Mirrors horizontally when the pose says so (facing left), since only the
+// right-facing side row of each sheet is ever used. Position is rounded to
+// whole pixels so the browser never bilinear-samples the sprite across a
+// fractional offset.
+function drawCharacter(viewer, pose, x, y) {
+  const mirrored = pose.mirrored;
   x = Math.round(x);
   y = Math.round(y);
 
@@ -281,13 +382,13 @@ function drawCharacter(viewer, frameColumn, x, y) {
     : null;
 
   if (wing) {
-    drawSpriteLayer(loadImage(wing.bg), frameColumn, 0, 0);
+    drawSpriteLayer(loadImage(wing.bg), pose, 0, 0);
   }
 
-  ctx.drawImage(getTintedBase(frameColumn, viewer.cor), 0, 0);
+  ctx.drawImage(getTintedBase(pose.row, pose.column, viewer.cor), 0, 0);
 
   if (viewer.chapeu && Object.hasOwn(manifest.hats, viewer.chapeu)) {
-    drawSpriteLayer(loadImage(manifest.hats[viewer.chapeu]), frameColumn, 0, 0);
+    drawSpriteLayer(loadImage(manifest.hats[viewer.chapeu]), pose, 0, 0);
   }
 
   if (
@@ -295,11 +396,11 @@ function drawCharacter(viewer, frameColumn, x, y) {
     !wing &&
     Object.hasOwn(manifest.accessories, viewer.acessorio)
   ) {
-    drawSpriteLayer(loadImage(manifest.accessories[viewer.acessorio]), frameColumn, 0, 0);
+    drawSpriteLayer(loadImage(manifest.accessories[viewer.acessorio]), pose, 0, 0);
   }
 
   if (wing) {
-    drawSpriteLayer(loadImage(wing.fg), frameColumn, 0, 0);
+    drawSpriteLayer(loadImage(wing.fg), pose, 0, 0);
   }
 
   ctx.restore();
@@ -344,8 +445,7 @@ function drawViewer(viewer, timestamp) {
     ctx.stroke();
   }
 
-  const frameColumn = walkFrameColumn(viewer.distanceWalked);
-  drawCharacter(viewer, frameColumn, viewer.x, yOffset);
+  drawCharacter(viewer, spritePose(viewer), viewer.x, yOffset);
 
   drawBadges(viewer, yOffset);
 
@@ -365,23 +465,7 @@ function tick(timestamp) {
 
   if (assetsReady()) {
     for (const viewer of viewers.values()) {
-      const travelled = viewer.speed * deltaSeconds;
-      viewer.x += viewer.direction * travelled;
-      viewer.distanceWalked += travelled;
-
-      // Patrol back and forth instead of vanishing off one edge and
-      // reappearing on the other. Re-roll speed on every bounce so it keeps
-      // varying over time, not just once at spawn.
-      if (viewer.x <= 0) {
-        viewer.x = 0;
-        viewer.direction = 1;
-        viewer.speed = randomSpeed();
-      } else if (viewer.x >= canvas.width - frameWidth) {
-        viewer.x = canvas.width - frameWidth;
-        viewer.direction = -1;
-        viewer.speed = randomSpeed();
-      }
-
+      updateMovement(viewer, timestamp, deltaSeconds);
       drawViewer(viewer, timestamp);
     }
   }

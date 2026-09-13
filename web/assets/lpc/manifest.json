@@ -10,6 +10,7 @@
     "right": 3
   },
   "walk_frame_columns": [1, 2, 3, 4, 5, 6, 7, 8],
+  "idle_frame_column": 0,
   "base_layers": ["body_walk.png", "head_walk.png"],
   "hats": {
     "boné": "hat_bone_walk.png",
