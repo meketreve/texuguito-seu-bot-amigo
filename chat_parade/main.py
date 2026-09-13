@@ -84,5 +84,15 @@ async def main() -> None:
     )
 
 
+def run() -> None:
+    """Entry point. Ctrl+C is the normal way to stop the app from a terminal,
+    so it ends with a short message instead of a KeyboardInterrupt traceback."""
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print()
+        print("[chat-parade] encerrado.")
+
+
 if __name__ == "__main__":
-    asyncio.run(main())
+    run()

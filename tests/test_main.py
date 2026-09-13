@@ -11,6 +11,7 @@ from chat_parade.main import (
     _run_until_error,
     _run_web_server,
     build_components,
+    run,
 )
 
 
@@ -170,3 +171,15 @@ def test_load_and_refresh_config_falls_back_when_refresh_fails(monkeypatch, tmp_
     assert result == original
     assert update_calls == []
     assert "não foi possível renovar" in capsys.readouterr().out.lower()
+
+
+def test_ctrl_c_ends_with_a_message_instead_of_a_traceback(monkeypatch, capsys):
+    def interrupted(coro):
+        coro.close()
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr(main_module.asyncio, "run", interrupted)
+
+    run()
+
+    assert "[chat-parade] encerrado." in capsys.readouterr().out
