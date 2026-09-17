@@ -1,10 +1,15 @@
 # Handoff
 
 _Última atualização: 2026-09-13 — último commit de código: "Rename the project to Texuguito" (`master`, sincronizado
-com `origin`). O usuário vai deixar o repo **público**._
+com `origin`). Repo **público** desde 2026-09-17._
 
 ## Estado atual
 
+- **Repo público** (2026-09-17), descrição "Bot de comandos pra Twitch com overlay pixel
+  art: desfile do chat no rodapé, pontos, áudios e TTS". Antes disso, varredura de todos
+  os 61 commits e 226 blobs: sem credenciais, sem dados pessoais, sem caminhos da máquina,
+  autor sempre o e-mail noreply; sem issues/PRs/releases/wiki. Repetir essa varredura
+  antes de commitar qualquer coisa nova que cite caminhos locais ou credenciais.
 - **Projeto renomeado pra Texuguito** (2026-09-13): o repo do GitHub virou
   `meketreve/texuguito-seu-bot-amigo` (o `chat-parade` antigo redireciona; o remote local
   já aponta pro nome novo). Nome visível trocado em README, `CLAUDE.md`, `run.bat`,
@@ -59,20 +64,12 @@ com `origin`). O usuário vai deixar o repo **público**._
    contra a Twitch real e o aviso de porta de retorno ocupada). Conferir: Python ausente
    (winget), primeira instalação no `.venv`, setup abrindo sozinho, `run.bat setup`,
    segunda janela avisando que já está aberto.
-2. **Tornar o repo público** — o usuário pediu pra **esperar**; só fazer quando ele
-   mandar. Histórico já checado: sem tokens nem dados pessoais, `.env`/`viewers.json`/
-   `points.json` nunca commitados, autor sempre o e-mail noreply. `HANDOFF.md`,
-   `CLAUDE.md` e `docs/superpowers/` ficariam visíveis (o handoff antigo cita os commits
-   do token vazado do Texuguito antigo, que morreu junto com o app). Sugerida a
-   descrição "Overlay pixel art pra Twitch + bot de pontos, áudios e TTS". Comando:
-   `gh repo edit meketreve/texuguito-seu-bot-amigo --visibility public
-   --accept-visibility-change-consequences`.
-3. **Testar ao vivo no OBS com o chat real.** Verificado só: suíte de testes + teste de
+2. **Testar ao vivo no OBS com o chat real.** Verificado só: suíte de testes + teste de
    ponta a ponta local (servidor real + overlay no navegador + gTTS real + fila + `!stop`
    + áudio quebrado no meio da fila), **sem Twitch**. Não verificado: loop de pontos com
    chatters reais, `!sorteio` até o fim, áudio dentro do Browser Source do OBS
    ("Controlar áudio via OBS"), movimento dos viewers com o chat real.
-4. **Outros clones do repositório** (ex.: a máquina Windows): depois do pull, rodar
+3. **Outros clones do repositório** (ex.: a máquina Windows): depois do pull, rodar
    `git rm --cached -r -q . && git reset --hard` com o working tree limpo, pra
    reescrever os arquivos com o fim de linha novo.
 
