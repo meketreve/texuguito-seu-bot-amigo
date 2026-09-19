@@ -1,6 +1,6 @@
 # Handoff
 
-_Última atualização: 2026-09-13 — último commit de código: "Rename the project to Texuguito" (`master`, sincronizado
+_Última atualização: 2026-09-19 — último commit de código: "Rename the package to texuguito and add run.sh" (`master`, sincronizado
 com `origin`). Repo **público** desde 2026-09-17._
 
 ## Estado atual
@@ -13,23 +13,30 @@ com `origin`). Repo **público** desde 2026-09-17._
 - **Projeto renomeado pra Texuguito** (2026-09-13): o repo do GitHub virou
   `meketreve/texuguito-seu-bot-amigo` (o `chat-parade` antigo redireciona; o remote local
   já aponta pro nome novo). Nome visível trocado em README, `CLAUDE.md`, `run.bat`,
-  mensagens do console (`[texuguito]`), overlay e respostas do bot. A pasta local e o
-  pacote Python continuam `chat_parade` (decisão do usuário, pra não quebrar nada).
-  O repo antigo do Texuguito (só o bot) foi **apagado** do GitHub pelo usuário; a pasta
-  local dele ainda existe na máquina do usuário (com a branch `master` que só existia
-  no remoto).
+  mensagens do console (`[texuguito]`), overlay e respostas do bot.
+  O repo antigo do Texuguito (só o bot) foi **apagado** do GitHub pelo usuário, e a pasta
+  local dele (a do `bot.py` antigo) foi
+  **apagada sem backup** em 2026-09-19, por decisão do usuário — o histórico dela, inclusive
+  a branch `master` que só existia ali, não existe mais em lugar nenhum. Os dados dela já
+  tinham sido copiados e conferidos (48 saldos e 49 áudios idênticos).
+- **Pacote e pasta renomeados** (2026-09-19): `chat_parade/` virou `texuguito/` e todas as
+  menções no código, testes, `run.bat`/`run.sh`, README e neste arquivo foram trocadas
+  (os planos/specs em `docs/superpowers/` ficaram como estão, são registro histórico).
+  158 testes passando depois da troca. A pasta local virou `texuguito-seu-bot-amigo`
+  (a `.venv` foi refeita do zero pelo `run.sh` depois da mudança, já que a antiga tinha
+  caminhos absolutos da pasta velha).
 
 - Overlay: viewers vagam pelo rodapé com sprite LPC (andar → parar → olhar em volta),
   cor/chapéu/acessório via chat, decorações de sub/mod/broadcaster, `!dança`, cheer.
   Constantes de ritmo no topo de `web/overlay.js`.
 - **Bot do Texuguito original incorporado** (`762282c`): pontos, soundboard, TTS e
   sorteio.
-  - `chat_parade/points.py` — `PointsStore` (`data/points.json`, mesmo formato do
+  - `texuguito/points.py` — `PointsStore` (`data/points.json`, mesmo formato do
     texuguito) e o loop de 1 ponto/min (presente em 2 checagens seguidas).
-  - `chat_parade/soundboard.py` — áudios em `audios/<preço>/<nome>.<ext>`, TTS (gTTS
+  - `texuguito/soundboard.py` — áudios em `audios/<preço>/<nome>.<ext>`, TTS (gTTS
     pt-BR) em cache na memória, e a ponte que manda o overlay tocar.
-  - `chat_parade/raffle.py` — sorteio.
-  - `chat_parade/economy_commands.py` — handlers de `!pontos !addpoints !p !tts !audios
+  - `texuguito/raffle.py` — sorteio.
+  - `texuguito/economy_commands.py` — handlers de `!pontos !addpoints !p !tts !audios
     !stop !reload !status !ping !sorteio !join`; o bot (`twitch_chat.py`) só repassa.
   - **Áudio toca no overlay** (`web/overlay.js`, fila sequencial; `!stop` pula o atual),
     servido por `/audios/...` e `/tts/<id>`. Sem overlay aberto, `!p`/`!tts` recusam
@@ -41,7 +48,7 @@ com `origin`). Repo **público** desde 2026-09-17._
 - **`run.bat` faz tudo pro usuário final** (`3247bc8`): acha o Python 3.10+ (oferece
   `winget` ou abre python.org), cria `.venv` própria, só reinstala dependências quando o
   `requirements.txt` muda (carimbo em `.venv/requirements.installed`), roda
-  `chat_parade.check_setup` e, se preciso, `chat_parade.oauth_setup`; `run.bat setup`
+  `texuguito.check_setup` e, se preciso, `texuguito.oauth_setup`; `run.bat setup`
   força a configuração.
   - `check_setup.py`: exit 0 ok / 1 precisa configurar (sem `.env`, Twitch recusou,
     token inválido, faltam escopos) / 2 sem internet (inicia mesmo assim) / 3 porta do
@@ -51,6 +58,18 @@ com `origin`). Repo **público** desde 2026-09-17._
     passo a passo; checa a porta de retorno **antes** de abrir o navegador (sem
     `SO_REUSEADDR` no Windows, que deixaria dividir a porta com outro programa);
     preserva `DATA_DIR`/`OVERLAY_PORT`/`AUDIO_DIR`/`AUDIO_VOLUME` ao reescrever o `.env`.
+- **`run.sh` (Linux/Mac)**: equivalente do `run.bat`. Acha um Python 3.10+, cria/conserta
+  a `.venv`, reinstala dependências só quando o `requirements.txt` muda (mesmo carimbo
+  `.venv/requirements.installed`), roda `check_setup` e, se preciso, `oauth_setup`, e
+  então `exec` no `texuguito.main`. `./run.sh setup` força a configuração e
+  `./run.sh test` roda o pytest. Sem Python, mostra o comando de instalação do sistema
+  (apt/dnf/pacman/zypper/brew) em vez de instalar sozinho com sudo. `.gitattributes`
+  ganhou `*.sh text eol=lf` (o `eol=crlf` global quebraria o shebang).
+  - Testado nesta máquina: `./run.sh test` (158 testes), branch de porta ocupada
+    (exit 3 → não inicia) e, num diretório de sandbox com módulos falsos, a criação da
+    `.venv` do zero, o pulo da reinstalação, a `.venv` quebrada sendo refeita, o desvio
+    pra configuração, o `setup` e o setup que falha. **Não** testado: `oauth_setup` real
+    pelo `run.sh` e o caminho "Python ausente".
 - **Twitch conectada com o app novo** (2026-09-13): o app antigo foi apagado pelo usuário
   (o token vazado no histórico do texuguito morreu junto); `.env` gerado pelo
   `oauth_setup`, `check_setup` OK e o bot entrou no chat de `meketreve` num teste de 15s.
