@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from chat_parade.viewer_store import ViewerStore
+from texuguito.viewer_store import ViewerStore
 
 
 def test_get_or_create_assigns_deterministic_default_color(tmp_path):

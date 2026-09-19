@@ -3,7 +3,7 @@ from __future__ import annotations
 import random
 from typing import Callable
 
-from chat_parade.points import PointsStore
+from texuguito.points import PointsStore
 
 
 class Raffle:

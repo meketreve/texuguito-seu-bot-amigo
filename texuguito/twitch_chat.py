@@ -4,13 +4,13 @@ import asyncio
 
 from twitchio.ext import commands
 
-from chat_parade import commands as cmds
-from chat_parade import economy_commands as eco
-from chat_parade.config import Config
-from chat_parade.points import PointsStore
-from chat_parade.raffle import Raffle
-from chat_parade.soundboard import Soundboard
-from chat_parade.viewer_store import ViewerEvent, ViewerStore
+from texuguito import commands as cmds
+from texuguito import economy_commands as eco
+from texuguito.config import Config
+from texuguito.points import PointsStore
+from texuguito.raffle import Raffle
+from texuguito.soundboard import Soundboard
+from texuguito.viewer_store import ViewerEvent, ViewerStore
 
 
 def _args(ctx: commands.Context) -> list[str]:

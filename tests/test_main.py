@@ -4,9 +4,9 @@ import dataclasses
 import pytest
 import twitchio.errors
 
-import chat_parade.main as main_module
-from chat_parade.config import Config
-from chat_parade.main import (
+import texuguito.main as main_module
+from texuguito.config import Config
+from texuguito.main import (
     _load_and_refresh_config,
     _run_until_error,
     _run_web_server,

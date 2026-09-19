@@ -1,6 +1,6 @@
 import pytest
 
-from chat_parade.config import MissingConfigError, env_is_complete, load_config
+from texuguito.config import MissingConfigError, env_is_complete, load_config
 
 
 def test_load_config_reads_required_fields(monkeypatch, tmp_path):

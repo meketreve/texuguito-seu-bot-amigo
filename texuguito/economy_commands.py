@@ -5,9 +5,9 @@ None for no reply), so they can be tested without a Twitch connection.
 """
 from __future__ import annotations
 
-from chat_parade.points import PointsStore
-from chat_parade.raffle import Raffle
-from chat_parade.soundboard import Soundboard
+from texuguito.points import PointsStore
+from texuguito.raffle import Raffle
+from texuguito.soundboard import Soundboard
 
 CLIP_COOLDOWN_SECONDS = 60
 TTS_COST = 200

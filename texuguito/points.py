@@ -4,7 +4,7 @@ import asyncio
 import json
 from pathlib import Path
 
-from chat_parade.viewer_store import ViewerStore
+from texuguito.viewer_store import ViewerStore
 
 POINTS_PER_TICK = 1
 POINTS_TICK_SECONDS = 60

@@ -2,11 +2,11 @@ import asyncio
 
 from twitchio import Chatter, Message
 
-from chat_parade.config import Config
-from chat_parade.points import PointsStore
-from chat_parade.soundboard import Soundboard, TtsCache
-from chat_parade.twitch_chat import ChatParadeBot, _args
-from chat_parade.viewer_store import ViewerStore
+from texuguito.config import Config
+from texuguito.points import PointsStore
+from texuguito.soundboard import Soundboard, TtsCache
+from texuguito.twitch_chat import ChatParadeBot, _args
+from texuguito.viewer_store import ViewerStore
 
 
 def _config(tmp_path) -> Config:

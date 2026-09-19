@@ -1,7 +1,7 @@
-from chat_parade import economy_commands as eco
-from chat_parade.points import PointsStore
-from chat_parade.raffle import Raffle
-from chat_parade.soundboard import Soundboard, TtsCache
+from texuguito import economy_commands as eco
+from texuguito.points import PointsStore
+from texuguito.raffle import Raffle
+from texuguito.soundboard import Soundboard, TtsCache
 
 
 class FakeOverlay:

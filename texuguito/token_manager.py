@@ -5,7 +5,7 @@ from pathlib import Path
 
 import requests
 
-from chat_parade.config import Config
+from texuguito.config import Config
 
 TOKEN_URL = "https://id.twitch.tv/oauth2/token"
 

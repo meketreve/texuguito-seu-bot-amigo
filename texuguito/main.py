@@ -5,14 +5,14 @@ import asyncio
 import twitchio.errors
 import uvicorn
 
-from chat_parade.chatters_poller import run_chatters_poller
-from chat_parade.config import Config, load_config
-from chat_parade.points import PointsStore, run_points_loop
-from chat_parade.soundboard import Soundboard, TtsCache
-from chat_parade.token_manager import refresh_token, update_env_file
-from chat_parade.twitch_chat import ChatParadeBot
-from chat_parade.viewer_store import ViewerEvent, ViewerStore
-from chat_parade.web_server import create_app
+from texuguito.chatters_poller import run_chatters_poller
+from texuguito.config import Config, load_config
+from texuguito.points import PointsStore, run_points_loop
+from texuguito.soundboard import Soundboard, TtsCache
+from texuguito.token_manager import refresh_token, update_env_file
+from texuguito.twitch_chat import ChatParadeBot
+from texuguito.viewer_store import ViewerEvent, ViewerStore
+from texuguito.web_server import create_app
 
 
 def build_components(config: Config):

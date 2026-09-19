@@ -1,6 +1,6 @@
 import json
 
-from chat_parade.points import POINTS_PER_TICK, PointsStore, award_tick
+from texuguito.points import POINTS_PER_TICK, PointsStore, award_tick
 
 
 def test_new_user_starts_at_zero(tmp_path):

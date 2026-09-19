@@ -2,7 +2,7 @@ from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from chat_parade.oauth_setup import (
+from texuguito.oauth_setup import (
     REDIRECT_URI,
     SCOPES,
     build_auth_url,
@@ -43,7 +43,7 @@ def test_exchange_code_for_token_returns_access_and_refresh_token(monkeypatch):
 
         return FakeResponse()
 
-    monkeypatch.setattr("chat_parade.oauth_setup.requests.post", fake_post)
+    monkeypatch.setattr("texuguito.oauth_setup.requests.post", fake_post)
 
     token, refresh_token = exchange_code_for_token("abc123", "shh", "the-code")
 
@@ -59,7 +59,7 @@ def test_exchange_code_for_token_raises_when_no_access_token(monkeypatch):
 
         return FakeResponse()
 
-    monkeypatch.setattr("chat_parade.oauth_setup.requests.post", fake_post)
+    monkeypatch.setattr("texuguito.oauth_setup.requests.post", fake_post)
 
     with pytest.raises(RuntimeError, match="invalid code"):
         exchange_code_for_token("abc123", "shh", "bad-code")
@@ -76,7 +76,7 @@ def test_fetch_account_returns_id_and_login_from_helix_users(monkeypatch):
 
         return FakeResponse()
 
-    monkeypatch.setattr("chat_parade.oauth_setup.requests.get", fake_get)
+    monkeypatch.setattr("texuguito.oauth_setup.requests.get", fake_get)
 
     assert fetch_account("abc123", "tok") == ("999", "meucanal")
 
@@ -91,7 +91,7 @@ def test_open_callback_server_returns_none_when_port_is_taken(monkeypatch):
     blocker.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     blocker.bind(("localhost", 0))
     blocker.listen()
-    monkeypatch.setattr("chat_parade.oauth_setup.REDIRECT_PORT", blocker.getsockname()[1])
+    monkeypatch.setattr("texuguito.oauth_setup.REDIRECT_PORT", blocker.getsockname()[1])
     try:
         assert open_callback_server() is None
     finally:

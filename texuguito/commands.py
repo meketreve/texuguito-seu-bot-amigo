@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 import webcolors
 
-from chat_parade.viewer_store import ViewerEvent, ViewerStore
+from texuguito.viewer_store import ViewerEvent, ViewerStore
 
 HATS = (
     "boné",

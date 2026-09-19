@@ -1,4 +1,7 @@
 # Store text files with LF in the repository and check them out with CRLF.
 * text=auto eol=crlf
 
+# Shell scripts precisam de LF mesmo no Windows (o Git Bash/WSL não engole CRLF).
+*.sh text eol=lf
+
 *.png binary

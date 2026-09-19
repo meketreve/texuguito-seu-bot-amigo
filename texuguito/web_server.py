@@ -9,8 +9,8 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from chat_parade.soundboard import AUDIO_URL_PREFIX, TTS_URL_PREFIX, TtsCache
-from chat_parade.viewer_store import ViewerEvent, ViewerStore
+from texuguito.soundboard import AUDIO_URL_PREFIX, TTS_URL_PREFIX, TtsCache
+from texuguito.viewer_store import ViewerEvent, ViewerStore
 
 WEB_DIR = Path(__file__).resolve().parent.parent / "web"
 

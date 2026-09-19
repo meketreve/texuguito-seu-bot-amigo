@@ -4,8 +4,8 @@ from unittest.mock import Mock
 import pytest
 import requests
 
-from chat_parade import check_setup
-from chat_parade.check_setup import (
+from texuguito import check_setup
+from texuguito.check_setup import (
     EXIT_NEEDS_SETUP,
     EXIT_OFFLINE,
     EXIT_OK,
@@ -13,7 +13,7 @@ from chat_parade.check_setup import (
     check,
     port_is_free,
 )
-from chat_parade.oauth_setup import SCOPES
+from texuguito.oauth_setup import SCOPES
 
 ENV = """CLIENT_ID=id
 CLIENT_SECRET=secret

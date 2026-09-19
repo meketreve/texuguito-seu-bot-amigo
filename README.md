@@ -12,10 +12,12 @@ Bot pra live na Twitch com overlay pixel art:
 
 ## Setup
 
-No Windows, é só dar dois cliques no **`run.bat`**. Ele cuida de tudo:
+No Windows, é só dar dois cliques no **`run.bat`**. No Linux/Mac, rode
+**`./run.sh`** num terminal. Os dois cuidam de tudo:
 
-1. **Python:** se não tiver o Python 3.10+, oferece instalar pelo `winget` (ou
-   abre a página de download).
+1. **Python:** se não tiver o Python 3.10+, o `run.bat` oferece instalar pelo
+   `winget` (ou abre a página de download); o `run.sh` mostra o comando de
+   instalação do seu sistema (`apt`, `dnf`, `pacman`, `brew`...).
 2. **Dependências:** instala tudo numa pasta `.venv` própria, sem mexer no
    Python do sistema. Só reinstala quando o `requirements.txt` muda.
 3. **Twitch:** confere se as credenciais do `.env` ainda funcionam. Na
@@ -28,8 +30,9 @@ No Windows, é só dar dois cliques no **`run.bat`**. Ele cuida de tudo:
 4. **Inicia** o Texuguito. Se ele já estiver aberto em outra janela, avisa em
    vez de abrir duas vezes.
 
-Pra trocar de app ou de conta, rode `run.bat setup`. Na configuração, Enter
-mantém o ID e o segredo atuais.
+Pra trocar de app ou de conta, rode `run.bat setup` (ou `./run.sh setup`). Na
+configuração, Enter mantém o ID e o segredo atuais. O `./run.sh test` roda a
+suíte de testes.
 
 O app da Twitch precisa ter `http://localhost:17563` nas URLs de
 redirecionamento OAuth, e essa porta precisa estar livre durante a
@@ -38,12 +41,12 @@ adicionar a URL nova no painel da Twitch. As
 permissões pedidas são só as que o app usa:
 `chat:read chat:edit moderator:read:chatters bits:read`.
 
-Sem `run.bat` (Linux/Mac ou manual):
+Manualmente, sem os scripts:
 
 1. `python -m venv .venv` e `.venv/bin/pip install -r requirements.txt`
-2. `.venv/bin/python -m chat_parade.oauth_setup` (configura a Twitch e escreve o `.env`)
+2. `.venv/bin/python -m texuguito.oauth_setup` (configura a Twitch e escreve o `.env`)
 3. Rode os testes: `.venv/bin/python -m pytest`
-4. Suba o app: `.venv/bin/python -m chat_parade.main`
+4. Suba o app: `.venv/bin/python -m texuguito.main`
 
 O processo não abre navegador nenhum — ele imprime no console algo como:
 
@@ -124,16 +127,16 @@ anel dourado ao redor do avatar por alguns segundos.
 A versão antiga (só o bot de pontos, com `bot.py`) guardava os mesmos dados:
 copie o `points.json` dela pra `data/points.json` e os saldos continuam, e as
 subpastas de `files/` pra `audios/`. O `.env` antigo também serve, desde que o
-app da Twitch dele ainda exista; se não, o `run.bat` percebe e abre a
+app da Twitch dele ainda exista; se não, o `run.bat`/`run.sh` percebe e abre a
 configuração.
 
 ## Se o token expirar
 
 Não precisa fazer nada: toda vez que o app sobe, ele renova o token sozinho
 usando o `REFRESH_TOKEN` guardado no `.env`. Se a Twitch recusar (app apagado,
-segredo trocado, acesso revogado), o `run.bat` percebe e abre a configuração de
-novo. Fora do `run.bat`, rode `python -m chat_parade.check_setup` pra saber se
-as credenciais funcionam e `python -m chat_parade.oauth_setup` pra refazer.
+segredo trocado, acesso revogado), o `run.bat`/`run.sh` percebe e abre a
+configuração de novo. Fora deles, rode `python -m texuguito.check_setup` pra saber se
+as credenciais funcionam e `python -m texuguito.oauth_setup` pra refazer.
 
 ## Créditos
 

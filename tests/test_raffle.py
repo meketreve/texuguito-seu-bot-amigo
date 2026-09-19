@@ -1,5 +1,5 @@
-from chat_parade.points import PointsStore
-from chat_parade.raffle import Raffle
+from texuguito.points import PointsStore
+from texuguito.raffle import Raffle
 
 
 def test_only_one_raffle_at_a_time():

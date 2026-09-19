@@ -1,4 +1,4 @@
-from chat_parade.soundboard import Soundboard, TtsCache, scan_audio_dir
+from texuguito.soundboard import Soundboard, TtsCache, scan_audio_dir
 
 
 class FakeOverlay:

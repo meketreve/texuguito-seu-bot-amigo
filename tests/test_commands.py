@@ -1,4 +1,4 @@
-from chat_parade.commands import (
+from texuguito.commands import (
     handle_acessorio,
     handle_avatarmod,
     handle_chapeu,
@@ -13,7 +13,7 @@ from chat_parade.commands import (
     validate_hat,
     validate_nick,
 )
-from chat_parade.viewer_store import ViewerStore
+from texuguito.viewer_store import ViewerStore
 
 
 def test_parse_command_extracts_name_and_args():

@@ -4,8 +4,8 @@ import asyncio
 
 import requests
 
-from chat_parade.config import Config
-from chat_parade.viewer_store import ViewerEvent, ViewerStore
+from texuguito.config import Config
+from texuguito.viewer_store import ViewerEvent, ViewerStore
 
 CHATTERS_URL = "https://api.twitch.tv/helix/chat/chatters"
 POLL_INTERVAL_SECONDS = 45

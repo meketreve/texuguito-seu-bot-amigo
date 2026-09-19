@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from chat_parade.config import Config
-from chat_parade.token_manager import refresh_token, update_env_file
+from texuguito.config import Config
+from texuguito.token_manager import refresh_token, update_env_file
 
 
 def make_config(tmp_path, **overrides) -> Config:
@@ -42,7 +42,7 @@ def test_refresh_token_returns_new_config_on_success(monkeypatch, tmp_path):
 
         return FakeResponse()
 
-    monkeypatch.setattr("chat_parade.token_manager.requests.post", fake_post)
+    monkeypatch.setattr("texuguito.token_manager.requests.post", fake_post)
 
     refreshed = refresh_token(config)
 
@@ -63,7 +63,7 @@ def test_refresh_token_returns_none_on_non_200(monkeypatch, tmp_path):
 
         return FakeResponse()
 
-    monkeypatch.setattr("chat_parade.token_manager.requests.post", fake_post)
+    monkeypatch.setattr("texuguito.token_manager.requests.post", fake_post)
 
     assert refresh_token(config) is None
 
@@ -74,7 +74,7 @@ def test_refresh_token_returns_none_on_request_exception(monkeypatch, tmp_path):
     def fake_post(url, data, timeout):
         raise ConnectionError("network down")
 
-    monkeypatch.setattr("chat_parade.token_manager.requests.post", fake_post)
+    monkeypatch.setattr("texuguito.token_manager.requests.post", fake_post)
 
     assert refresh_token(config) is None
 

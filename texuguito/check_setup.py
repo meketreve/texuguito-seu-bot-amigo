@@ -14,9 +14,9 @@ from pathlib import Path
 
 import requests
 
-from chat_parade.config import env_is_complete, load_config
-from chat_parade.oauth_setup import SCOPES
-from chat_parade.token_manager import refreshed_config, request_refresh, update_env_file
+from texuguito.config import env_is_complete, load_config
+from texuguito.oauth_setup import SCOPES
+from texuguito.token_manager import refreshed_config, request_refresh, update_env_file
 
 EXIT_OK = 0
 EXIT_NEEDS_SETUP = 1

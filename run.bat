@@ -46,7 +46,7 @@ rem --- 4. Conexao com a Twitch -----------------------------------------------
 if /i "%~1"=="setup" goto :setup
 
 echo 🔎 Conferindo a conexao com a Twitch...
-"%VENV_PY%" -m chat_parade.check_setup
+"%VENV_PY%" -m texuguito.check_setup
 if errorlevel 3 goto :already_running
 if errorlevel 2 goto :run
 if errorlevel 1 goto :setup
@@ -54,10 +54,10 @@ goto :run
 
 :setup
 echo.
-"%VENV_PY%" -m chat_parade.oauth_setup
+"%VENV_PY%" -m texuguito.oauth_setup
 if errorlevel 1 goto :setup_failed
 echo.
-"%VENV_PY%" -m chat_parade.check_setup
+"%VENV_PY%" -m texuguito.check_setup
 if errorlevel 3 goto :already_running
 if errorlevel 2 goto :run
 if errorlevel 1 goto :setup_failed
@@ -69,7 +69,7 @@ echo ======================================================
 echo 🚀 Iniciando o Texuguito. Feche esta janela pra encerrar.
 echo ======================================================
 echo.
-"%VENV_PY%" -m chat_parade.main
+"%VENV_PY%" -m texuguito.main
 echo.
 echo ⚠️  O Texuguito foi encerrado.
 echo.

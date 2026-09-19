@@ -4,9 +4,9 @@ import time
 
 from fastapi.testclient import TestClient
 
-from chat_parade.soundboard import TtsCache
-from chat_parade.viewer_store import ViewerEvent, ViewerStore
-from chat_parade.web_server import OverlayBroadcaster, create_app, viewer_payload
+from texuguito.soundboard import TtsCache
+from texuguito.viewer_store import ViewerEvent, ViewerStore
+from texuguito.web_server import OverlayBroadcaster, create_app, viewer_payload
 
 
 class _FakeConnection:
