@@ -83,11 +83,12 @@ com `origin`). Repo **público** desde 2026-09-17._
    contra a Twitch real e o aviso de porta de retorno ocupada). Conferir: Python ausente
    (winget), primeira instalação no `.venv`, setup abrindo sozinho, `run.bat setup`,
    segunda janela avisando que já está aberto.
-2. **Testar ao vivo no OBS com o chat real.** Verificado só: suíte de testes + teste de
-   ponta a ponta local (servidor real + overlay no navegador + gTTS real + fila + `!stop`
-   + áudio quebrado no meio da fila), **sem Twitch**. Não verificado: loop de pontos com
-   chatters reais, `!sorteio` até o fim, áudio dentro do Browser Source do OBS
-   ("Controlar áudio via OBS"), movimento dos viewers com o chat real.
+2. **Terminar o teste ao vivo no OBS.** Já verificado em 2026-09-19, com a Twitch real:
+   o app conectou ao chat de `meketreve`, o overlay virou Browser Source no OBS
+   (`http://localhost:8901/overlay`, com "Controlar áudio via OBS" marcado) e o `!pontos`
+   respondeu no chat. O loop de pontos também rodou (escreveu em `data/points.json`).
+   **Ainda não verificado:** `!p`/`!tts` tocando dentro do OBS com o áudio no mixer,
+   `!sorteio` até o fim, movimento dos viewers durante uma live de verdade.
 3. **Outros clones do repositório** (ex.: a máquina Windows): depois do pull, rodar
    `git rm --cached -r -q . && git reset --hard` com o working tree limpo, pra
    reescrever os arquivos com o fim de linha novo.
@@ -108,6 +109,15 @@ com `origin`). Repo **público** desde 2026-09-17._
   features estejam feitas.
 
 ## Notas
+
+- **Painéis (docks) da Twitch no OBS do usuário não funcionam — não é bug do projeto.**
+  O OBS está em modo "chave de transmissão", sem conta conectada, então o navegador
+  embutido (CEF) fica anônimo: os cookies dele só têm `unique_id`/`api_token`, sem
+  `auth-token`. Resultado: o chat do painel aceita o texto e não envia, o dock de título
+  não muda nada, e a fonte `alertas` loga `unauthenticated`. O usuário tentou conectar a
+  conta em 2026-09-19, não pegou, e desligou os painéis; usa o chat pelo navegador normal.
+  Se aparecer de novo como "os comandos não funcionam", o bot não é o culpado — testar
+  mandando o comando pelo chat do site antes de investigar o código.
 
 - Porta de retorno do OAuth: **17563** (era 3000, que conflita com servidores de dev).
   Apps antigos só com a 3000 dão `redirect_mismatch` na Twitch; basta adicionar a nova.
